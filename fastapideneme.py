@@ -1,8 +1,18 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
 
 app = FastAPI()
+
+# CORS Middleware ekliyoruz, böylece frontend farklı origin'den istek atabilir
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Geliştirme için tüm domainlere izin veriyoruz
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Kullanıcıdan sadece bu alanlar istenecek:
 class KitapEkle(BaseModel):
@@ -70,17 +80,29 @@ def favori_yap(kitap_id: int):
     for kitap in kutuphane:
         if kitap.id == kitap_id:
             if kitap.favori:
-                return {"mesaj": f"{kitap.baslik} zaten favorilerdeydi."}
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"{kitap.baslik} zaten favorilerdeydi."
+                )
             kitap.favori = True
             return {"mesaj": f"{kitap.baslik} favorilere eklendi."}
-    raise HTTPException(status_code=404, detail="Kitap bulunamadı!")
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="Kitap bulunamadı!"
+    )
 
 @app.post("/kitap/{kitap_id}/favori-kaldir/")
 def favori_kaldir(kitap_id: int):
     for kitap in kutuphane:
         if kitap.id == kitap_id:
             if not kitap.favori:
-                return {"mesaj": f"{kitap.baslik} zaten favorilerden çıkarılmıştı."}
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"{kitap.baslik} zaten favorilerden çıkarılmıştı."
+                )
             kitap.favori = False
             return {"mesaj": f"{kitap.baslik} favorilerden çıkarıldı."}
-    raise HTTPException(status_code=404, detail="Kitap bulunamadı!")
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="Kitap bulunamadı!"
+    )

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Kitap Listesi</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: auto; padding: 10px; }
+    input, button { padding: 8px; margin: 5px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    tr.favori { background-color: #ffffcc; }
+    .mesaj { margin-top: 15px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>📚 Kitap Listesi</h1>
+
+  <h2>Yeni Kitap Ekle</h2>
+  <form id="kitapForm">
+    <input type="text" id="baslik" placeholder="Başlık" required />
+    <input type="text" id="yazar" placeholder="Yazar" required />
+    <input type="number" id="yayin_yili" placeholder="Yayın Yılı" required />
+    <input type="number" id="sayfa_sayisi" placeholder="Sayfa Sayısı" required />
+    <input type="text" id="tur" placeholder="Tür (opsiyonel)" />
+    <button type="submit">Ekle</button>
+  </form>
+
+  <div class="mesaj" id="mesaj"></div>
+
+  <h2>Kitaplar</h2>
+  <table id="kitaplarTable">
+    <thead>
+      <tr>
+        <th>ID</th><th>Başlık</th><th>Yazar</th><th>Yayın Yılı</th><th>Sayfa</th><th>Tür</th><th>Favori</th><th>İşlemler</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const apiUrl = 'http://127.0.0.1:8000';
+
+    // Mesaj göster
+    function mesajGoster(text, hata=false) {
+      const div = document.getElementById('mesaj');
+      div.textContent = text;
+      div.style.color = hata ? 'red' : 'green';
+      setTimeout(() => { div.textContent = ''; }, 4000);
+    }
+
+    // Kitapları getir ve tabloyu güncelle
+    async function kitaplariGetir() {
+      const res = await fetch(apiUrl + '/kitaplar/');
+      const kitaplar = await res.json();
+      const tbody = document.querySelector('#kitaplarTable tbody');
+      tbody.innerHTML = '';
+
+      kitaplar.forEach(k => {
+        const tr = document.createElement('tr');
+        if(k.favori) tr.classList.add('favori');
+        tr.innerHTML = `
+          <td>${k.id}</td>
+          <td>${k.baslik}</td>
+          <td>${k.yazar}</td>
+          <td>${k.yayin_yili}</td>
+          <td>${k.sayfa_sayisi}</td>
+          <td>${k.tur || 'Bilinmiyor'}</td>
+          <td>${k.favori ? '⭐' : ''}</td>
+          <td>
+            <button onclick="favoriEkle(${k.id})">Favori Ekle</button>
+            <button onclick="favoriKaldir(${k.id})">Favori Kaldır</button>
+            <button onclick="kitapSil(${k.id})">Sil</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Yeni kitap ekle
+    document.getElementById('kitapForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const baslik = document.getElementById('baslik').value;
+      const yazar = document.getElementById('yazar').value;
+      const yayin_yili = parseInt(document.getElementById('yayin_yili').value);
+      const sayfa_sayisi = parseInt(document.getElementById('sayfa_sayisi').value);
+      const tur = document.getElementById('tur').value || "Bilinmiyor";
+
+      try {
+        const res = await fetch(apiUrl + '/kitap-ekle/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ baslik, yazar, yayin_yili, sayfa_sayisi, tur })
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || 'Bir hata oluştu');
+        }
+        await kitaplariGetir();
+        mesajGoster('Kitap eklendi.');
+        e.target.reset();
+      } catch (error) {
+        mesajGoster(error.message, true);
+      }
+    });
+
+    // Favori yap
+    async function favoriEkle(id) {
+      try {
+        const res = await fetch(`${apiUrl}/kitap/${id}/favori/`, { method: 'POST' });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail);
+        }
+        mesajGoster('Favorilere eklendi.');
+        kitaplariGetir();
+      } catch (error) {
+        mesajGoster(error.message, true);
+      }
+    }
+
+    // Favori kaldır
+    async function favoriKaldir(id) {
+      try {
+        const res = await fetch(`${apiUrl}/kitap/${id}/favori-kaldir/`, { method: 'POST' });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail);
+        }
+        mesajGoster('Favorilerden çıkarıldı.');
+        kitaplariGetir();
+      } catch (error) {
+        mesajGoster(error.message, true);
+      }
+    }
+
+    // Kitap sil
+    async function kitapSil(id) {
+      try {
+        const res = await fetch(`${apiUrl}/kitap-sil/${id}`, { method: 'DELETE' });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail);
+        }
+        mesajGoster('Kitap silindi.');
+        kitaplariGetir();
+      } catch (error) {
+        mesajGoster(error.message, true);
+      }
+    }
+
+    // Sayfa açılır açılmaz kitapları listele
+    kitaplariGetir();
+  </script>
+</body>
+</html>
