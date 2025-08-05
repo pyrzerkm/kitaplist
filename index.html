@@ -1,284 +1,278 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <title>Kitap Listesi</title>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
-  <style>
-    body {
-      font-family: 'Roboto', sans-serif;
-      background-color: #f4f6f8;
-      max-width: 900px;
-      margin: auto;
-      padding: 20px;
-    }
-
-    h1, h2 {
-      text-align: center;
-      color: #333;
-    }
-
-    form {
-      background: white;
-      padding: 15px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      margin-bottom: 20px;
-    }
-
-    input, button {
-      padding: 10px;
-      margin: 5px 0;
-      width: 100%;
-      box-sizing: border-box;
-    }
-
-    button {
-      cursor: pointer;
-      border: none;
-      border-radius: 6px;
-      font-weight: bold;
-      transition: 0.3s;
-    }
-
-    button:hover {
-      opacity: 0.85;
-    }
-
-    #formButton {
-      background-color: #4caf50;
-      color: white;
-    }
-
-    #iptalButton {
-      background-color: #999;
-      color: white;
-    }
-
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      background-color: white;
-      box-shadow: 0 0 10px rgba(0,0,0,0.05);
-      border-radius: 6px;
-      overflow: hidden;
-    }
-
-    th, td {
-      border-bottom: 1px solid #ddd;
-      padding: 12px;
-      text-align: left;
-    }
-
-    tr:hover {
-      background-color: #f9f9f9;
-    }
-
-    tr.favori {
-      background-color: #fffbe6;
-    }
-
-    .button-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-
-    .btn {
-      padding: 6px 10px;
-      border-radius: 5px;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      white-space: nowrap;
-    }
-
-    .btn-sil { background-color: #f44336; color: white; }
-    .btn-favori { background-color: #ff9800; color: white; }
-    .btn-kaldir { background-color: #9e9e9e; color: white; }
-    .btn-duzenle { background-color: #2196f3; color: white; }
-
-    .mesaj {
-      margin-top: 10px;
-      font-weight: bold;
-      text-align: center;
-    }
-  </style>
+    <meta charset="UTF-8" />
+    <title>Kitap Listesi</title>
+    <style>
+        /* Aynı stil kodları */
+        body { font-family: Arial, sans-serif; background-color: #f0f4f8; margin: 0; padding: 20px;}
+        h1 { color: #333; text-align: center; }
+        form, table { max-width: 800px; margin: auto; margin-bottom: 20px; }
+        label { display: block; margin-top: 10px; }
+        input, select { width: 100%; padding: 8px; margin-top: 4px; }
+        button { margin-top: 12px; padding: 10px 15px; cursor: pointer; }
+        table { margin-top: 30px; width: 100%; border-collapse: collapse; }
+        th, td { padding: 10px; background-color: #fff; border: 1px solid #ccc; }
+        th { background-color: #e0e0e0; }
+        .actions button { margin: 2px; }
+        .favori { color: goldenrod; }
+        .error { color: red; text-align: center; }
+        .success { color: green; text-align: center; }
+        /* Güncelleme formunu başlangıçta gizle */
+        #kitapGuncelleForm { display: none; border: 1px solid #ccc; padding: 15px; background: #fff; }
+    </style>
 </head>
 <body>
-  <h1>📚 Kitap Listesi</h1>
 
-  <h2 id="formBaslik">Yeni Kitap Ekle</h2>
-  <form id="kitapForm">
-    <input type="text" id="baslik" placeholder="Başlık" required />
-    <input type="text" id="yazar" placeholder="Yazar" required />
-    <input type="number" id="yayin_yili" placeholder="Yayın Yılı" required />
-    <input type="number" id="sayfa_sayisi" placeholder="Sayfa Sayısı" required />
-    <input type="text" id="tur" placeholder="Tür (opsiyonel)" />
-    <button type="submit" id="formButton">📘 Ekle</button>
-    <button type="button" id="iptalButton" style="display:none;" onclick="iptalEt()">İptal</button>
-  </form>
+    <h1>📚 Kitap Listesi</h1>
 
-  <div class="mesaj" id="mesaj"></div>
+    <div id="mesaj"></div>
 
-  <h2>Mevcut Kitaplar</h2>
-  <table id="kitaplarTable">
-    <thead>
-      <tr>
-        <th>ID</th><th>Başlık</th><th>Yazar</th><th>Yayın Yılı</th><th>Sayfa</th><th>Tür</th><th>Favori</th><th>İşlemler</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+    <!-- Kitap Ekleme Formu -->
+    <form id="kitapEkleForm">
+        <h2>Yeni Kitap Ekle</h2>
+        <label for="baslikEkle">Başlık:</label>
+        <input type="text" id="baslikEkle" required>
 
-  <script>
-    const apiUrl = 'http://127.0.0.1:8000';
-    let guncellemeModu = false;
-    let guncellenecekId = null;
+        <label for="yazarEkle">Yazar:</label>
+        <input type="text" id="yazarEkle" required>
 
-    function mesajGoster(text, hata=false) {
-      const div = document.getElementById('mesaj');
-      div.textContent = text;
-      div.style.color = hata ? 'red' : 'green';
-      setTimeout(() => { div.textContent = ''; }, 4000);
-    }
+        <label for="yayin_yiliEkle">Yayın Yılı:</label>
+        <input type="number" id="yayin_yiliEkle" required>
 
-    async function kitaplariGetir() {
-      const res = await fetch(apiUrl + '/kitaplar/');
-      const kitaplar = await res.json();
-      const tbody = document.querySelector('#kitaplarTable tbody');
-      tbody.innerHTML = '';
+        <label for="sayfa_sayisiEkle">Sayfa Sayısı:</label>
+        <input type="number" id="sayfa_sayisiEkle" required>
 
-      kitaplar.forEach(k => {
-        const tr = document.createElement('tr');
-        if(k.favori) tr.classList.add('favori');
-        tr.innerHTML = `
-          <td>${k.id}</td>
-          <td>${k.baslik}</td>
-          <td>${k.yazar}</td>
-          <td>${k.yayin_yili}</td>
-          <td>${k.sayfa_sayisi}</td>
-          <td>${k.tur || 'Bilinmiyor'}</td>
-          <td>${k.favori ? '⭐' : ''}</td>
-          <td>
-            <div class="button-group">
-              <button class="btn btn-favori" onclick="favoriEkle(${k.id})">⭐ Favori Ekle</button>
-              <button class="btn btn-kaldir" onclick="favoriKaldir(${k.id})">🚫 Favori Kaldır</button>
-              <button class="btn btn-sil" onclick="kitapSil(${k.id})">🗑️ Sil</button>
-              <button class="btn btn-duzenle" onclick="kitapDuzenle(${k.id})">📝 Güncelle</button>
-            </div>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
+        <label for="turEkle">Tür:</label>
+        <input type="text" id="turEkle">
 
-    document.getElementById('kitapForm').addEventListener('submit', async e => {
-      e.preventDefault();
-      const baslik = document.getElementById('baslik').value;
-      const yazar = document.getElementById('yazar').value;
-      const yayin_yili = parseInt(document.getElementById('yayin_yili').value);
-      const sayfa_sayisi = parseInt(document.getElementById('sayfa_sayisi').value);
-      const tur = document.getElementById('tur').value || "Bilinmiyor";
+        <label for="kategoriEkle">Kategori:</label>
+        <select id="kategoriEkle" required>
+            <option value="">Kategori Seç</option>
+            <option>Bilim ve Mühendislik</option>
+            <option>Çocuk Kitapları</option>
+            <option>Açık Kaynak Kitapları</option>
+            <option>Dil Kitapları</option>
+            <option>Tarih Kitapları</option>
+        </select>
 
-      const kitapData = { baslik, yazar, yayin_yili, sayfa_sayisi, tur };
+        <button type="submit">📌 Kitap Ekle</button>
+    </form>
 
-      try {
-        let url = apiUrl + '/kitap-ekle/';
-        let method = 'POST';
-        if (guncellemeModu) {
-          url = `${apiUrl}/kitap-guncelle/${guncellenecekId}`;
-          method = 'PUT';
+    <!-- Kitap Güncelleme Formu -->
+    <form id="kitapGuncelleForm">
+        <h2>Kitap Güncelle</h2>
+        <input type="hidden" id="kitapIdGuncelle">
+
+        <label for="baslikGuncelle">Başlık:</label>
+        <input type="text" id="baslikGuncelle" required>
+
+        <label for="yazarGuncelle">Yazar:</label>
+        <input type="text" id="yazarGuncelle" required>
+
+        <label for="yayin_yiliGuncelle">Yayın Yılı:</label>
+        <input type="number" id="yayin_yiliGuncelle" required>
+
+        <label for="sayfa_sayisiGuncelle">Sayfa Sayısı:</label>
+        <input type="number" id="sayfa_sayisiGuncelle" required>
+
+        <label for="turGuncelle">Tür:</label>
+        <input type="text" id="turGuncelle">
+
+        <label for="kategoriGuncelle">Kategori:</label>
+        <select id="kategoriGuncelle" required>
+            <option value="">Kategori Seç</option>
+            <option>Bilim ve Mühendislik</option>
+            <option>Çocuk Kitapları</option>
+            <option>Açık Kaynak Kitapları</option>
+            <option>Dil Kitapları</option>
+            <option>Tarih Kitapları</option>
+        </select>
+
+        <button type="submit">💾 Güncelle</button>
+        <button type="button" id="iptalGuncelle">❌ İptal</button>
+    </form>
+
+    <table id="kitaplarTablosu">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Başlık</th>
+                <th>Yazar</th>
+                <th>Yıl</th>
+                <th>Sayfa</th>
+                <th>Tür</th>
+                <th>Kategori</th>
+                <th>Favori</th>
+                <th>İşlemler</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+<script>
+    const apiUrl = "http://localhost:8000";
+
+    // Kitap Ekleme formu
+    document.getElementById('kitapEkleForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const baslik = document.getElementById('baslikEkle').value;
+        const yazar = document.getElementById('yazarEkle').value;
+        const yayin_yili = parseInt(document.getElementById('yayin_yiliEkle').value);
+        const sayfa_sayisi = parseInt(document.getElementById('sayfa_sayisiEkle').value);
+        const tur = document.getElementById('turEkle').value;
+        const kategori = document.getElementById('kategoriEkle').value;
+
+        if (!kategori) {
+            mesajGoster("⚠️ Kategori seçmelisiniz!", true);
+            return;
         }
 
-        const res = await fetch(url, {
-          method: method,
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(kitapData)
-        });
+        const kitap = { baslik, yazar, yayin_yili, sayfa_sayisi, tur, kategori };
 
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.detail || 'Bir hata oluştu');
+        try {
+            const response = await fetch(`${apiUrl}/kitap-ekle/`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(kitap),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                mesajGoster("⚠️ " + data.detail, true);
+                return;
+            }
+
+            mesajGoster("✅ Kitap başarıyla eklendi!");
+            this.reset();
+            kitaplariYukle();
+        } catch (error) {
+            mesajGoster("❌ Hata oluştu!", true);
         }
-
-        await kitaplariGetir();
-        mesajGoster(guncellemeModu ? 'Kitap güncellendi.' : 'Kitap eklendi.');
-        e.target.reset();
-        if (guncellemeModu) iptalEt();
-
-      } catch (error) {
-        mesajGoster(error.message, true);
-      }
     });
 
-    function iptalEt() {
-      guncellemeModu = false;
-      guncellenecekId = null;
-      document.getElementById('formButton').textContent = '📘 Ekle';
-      document.getElementById('formBaslik').textContent = 'Yeni Kitap Ekle';
-      document.getElementById('iptalButton').style.display = 'none';
-      document.getElementById('kitapForm').reset();
+    // Kitap Güncelleme formu
+    document.getElementById('kitapGuncelleForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const kitapId = document.getElementById('kitapIdGuncelle').value;
+        const baslik = document.getElementById('baslikGuncelle').value;
+        const yazar = document.getElementById('yazarGuncelle').value;
+        const yayin_yili = parseInt(document.getElementById('yayin_yiliGuncelle').value);
+        const sayfa_sayisi = parseInt(document.getElementById('sayfa_sayisiGuncelle').value);
+        const tur = document.getElementById('turGuncelle').value;
+        const kategori = document.getElementById('kategoriGuncelle').value;
+
+        if (!kategori) {
+            mesajGoster("⚠️ Kategori seçmelisiniz!", true);
+            return;
+        }
+
+        const kitap = { baslik, yazar, yayin_yili, sayfa_sayisi, tur, kategori };
+
+        try {
+            const response = await fetch(`${apiUrl}/kitap-guncelle/${kitapId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(kitap),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                mesajGoster("⚠️ " + data.detail, true);
+                return;
+            }
+
+            mesajGoster("✅ Kitap başarıyla güncellendi!");
+            this.reset();
+            document.getElementById('kitapGuncelleForm').style.display = "none";
+            kitaplariYukle();
+        } catch (error) {
+            mesajGoster("❌ Hata oluştu!", true);
+        }
+    });
+
+    // İptal butonu güncelleme formunda
+    document.getElementById('iptalGuncelle').addEventListener('click', function() {
+        document.getElementById('kitapGuncelleForm').style.display = "none";
+    });
+
+    // Kitapları yükleme
+    async function kitaplariYukle() {
+        const response = await fetch(`${apiUrl}/kitaplar/`);
+        const kitaplar = await response.json();
+        const tbody = document.querySelector('#kitaplarTablosu tbody');
+        tbody.innerHTML = "";
+
+        kitaplar.forEach(k => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${k.id}</td>
+                <td>${k.baslik}</td>
+                <td>${k.yazar}</td>
+                <td>${k.yayin_yili}</td>
+                <td>${k.sayfa_sayisi}</td>
+                <td>${k.tur}</td>
+                <td>${k.kategori}</td>
+                <td class="${k.favori ? 'favori' : ''}">${k.favori ? "⭐" : ""}</td>
+                <td class="actions">
+                    <button onclick="kitapguncelle(${k.id})">✏️ Güncelle
+                    <button onclick="kitapSil(${k.id})">🗑️ Sil</button>
+                    <button onclick="favoriDegistir(${k.id}, ${k.favori})">
+                        ${k.favori ? "💔 Favoriden Çıkar" : "💖 Favori Yap"}
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
     }
 
-    async function kitapDuzenle(id) {
-      try {
+    // guncelleme butonuna basınca güncelleme formunu doldurup göster
+    async function kitapguncelle(id) {
         const res = await fetch(`${apiUrl}/kitap/${id}`);
-        if (!res.ok) throw new Error('Kitap bulunamadı');
         const kitap = await res.json();
 
-        document.getElementById('baslik').value = kitap.baslik;
-        document.getElementById('yazar').value = kitap.yazar;
-        document.getElementById('yayin_yili').value = kitap.yayin_yili;
-        document.getElementById('sayfa_sayisi').value = kitap.sayfa_sayisi;
-        document.getElementById('tur').value = kitap.tur;
+        document.getElementById('kitapIdGuncelle').value = kitap.id;
+        document.getElementById('baslikGuncelle').value = kitap.baslik;
+        document.getElementById('yazarGuncelle').value = kitap.yazar;
+        document.getElementById('yayin_yiliGuncelle').value = kitap.yayin_yili;
+        document.getElementById('sayfa_sayisiGuncelle').value = kitap.sayfa_sayisi;
+        document.getElementById('turGuncelle').value = kitap.tur;
+        document.getElementById('kategoriGuncelle').value = kitap.kategori;
 
-        guncellemeModu = true;
-        guncellenecekId = id;
-        document.getElementById('formButton').textContent = '📝 Güncelle';
-        document.getElementById('formBaslik').textContent = 'Kitabı Güncelle';
-        document.getElementById('iptalButton').style.display = 'inline-block';
-
-      } catch (error) {
-        mesajGoster(error.message, true);
-      }
-    }
-
-    async function favoriEkle(id) {
-      try {
-        const res = await fetch(`${apiUrl}/kitap/${id}/favori/`, { method: 'POST' });
-        if (!res.ok) throw new Error((await res.json()).detail);
-        mesajGoster('Favorilere eklendi.');
-        kitaplariGetir();
-      } catch (error) {
-        mesajGoster(error.message, true);
-      }
-    }
-
-    async function favoriKaldir(id) {
-      try {
-        const res = await fetch(`${apiUrl}/kitap/${id}/favori-kaldir/`, { method: 'POST' });
-        if (!res.ok) throw new Error((await res.json()).detail);
-        mesajGoster('Favorilerden çıkarıldı.');
-        kitaplariGetir();
-      } catch (error) {
-        mesajGoster(error.message, true);
-      }
+        document.getElementById('kitapGuncelleForm').style.display = "block";
+        window.scrollTo(0, document.body.scrollHeight);
     }
 
     async function kitapSil(id) {
-      try {
-        const res = await fetch(`${apiUrl}/kitap-sil/${id}`, { method: 'DELETE' });
-        if (!res.ok) throw new Error((await res.json()).detail);
-        mesajGoster('Kitap silindi.');
-        kitaplariGetir();
-      } catch (error) {
-        mesajGoster(error.message, true);
-      }
+        if (!confirm("Kitap silinsin mi?")) return;
+        await fetch(`${apiUrl}/kitap-sil/${id}`, { method: "DELETE" });
+        kitaplariYukle();
     }
 
-    kitaplariGetir();
-  </script>
+    async function favoriDegistir(id, favoriMi) {
+        const url = favoriMi
+            ? `${apiUrl}/kitap/${id}/favori-kaldir/`
+            : `${apiUrl}/kitap/${id}/favori/`;
+        await fetch(url, { method: "POST" });
+        kitaplariYukle();
+    }
+
+    function mesajGoster(mesaj, hata = false) {
+        const mesajDiv = document.getElementById("mesaj");
+        mesajDiv.textContent = mesaj;
+        mesajDiv.className = hata ? "error" : "success";
+        setTimeout(() => {
+            mesajDiv.textContent = "";
+            mesajDiv.className = "";
+        }, 3000);
+    }
+
+    kitaplariYukle();
+</script>
+
 </body>
 </html>

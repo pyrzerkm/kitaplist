@@ -5,9 +5,10 @@ class KitapModel(Base):
     __tablename__ = "kitaplar"
 
     id = Column(Integer, primary_key=True, index=True)
-    baslik = Column(String, index=True)
-    yazar = Column(String)
-    yayin_yili = Column(Integer)
-    sayfa_sayisi = Column(Integer)
-    tur = Column(String, default="Bilinmiyor")
+    baslik = Column(String, nullable=False)
+    yazar = Column(String, nullable=False)
+    yayin_yili = Column(Integer, nullable=False)
+    sayfa_sayisi = Column(Integer, nullable=False)
+    tur = Column(String, nullable=True)
     favori = Column(Boolean, default=False)
+    kategori = Column(String, nullable=False)  # ✅ Yeni alan
