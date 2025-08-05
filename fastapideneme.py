@@ -82,7 +82,7 @@ def favori_yap(kitap_id: int):
             if kitap.favori:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"{kitap.baslik} zaten favorilerdeydi."
+                    detail=f"{kitap.baslik} kitabı önceden favorilendi."
                 )
             kitap.favori = True
             return {"mesaj": f"{kitap.baslik} favorilere eklendi."}
@@ -98,7 +98,7 @@ def favori_kaldir(kitap_id: int):
             if not kitap.favori:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"{kitap.baslik} zaten favorilerden çıkarılmıştı."
+                    detail=f"{kitap.baslik} kitabı favorilerde degil."
                 )
             kitap.favori = False
             return {"mesaj": f"{kitap.baslik} favorilerden çıkarıldı."}

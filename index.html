@@ -3,31 +3,126 @@
 <head>
   <meta charset="UTF-8" />
   <title>Kitap Listesi</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
   <style>
-    body { font-family: Arial, sans-serif; max-width: 800px; margin: auto; padding: 10px; }
-    input, button { padding: 8px; margin: 5px; }
-    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-    tr.favori { background-color: #ffffcc; }
-    .mesaj { margin-top: 15px; font-weight: bold; }
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: #f4f6f8;
+      max-width: 900px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    h1, h2 {
+      text-align: center;
+      color: #333;
+    }
+
+    form {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+
+    input, button {
+      padding: 10px;
+      margin: 5px 0;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      opacity: 0.85;
+    }
+
+    #formButton {
+      background-color: #4caf50;
+      color: white;
+    }
+
+    #iptalButton {
+      background-color: #999;
+      color: white;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      background-color: white;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    th, td {
+      border-bottom: 1px solid #ddd;
+      padding: 12px;
+      text-align: left;
+    }
+
+    tr:hover {
+      background-color: #f9f9f9;
+    }
+
+    tr.favori {
+      background-color: #fffbe6;
+    }
+
+    .button-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .btn {
+      padding: 6px 10px;
+      border-radius: 5px;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+
+    .btn-sil { background-color: #f44336; color: white; }
+    .btn-favori { background-color: #ff9800; color: white; }
+    .btn-kaldir { background-color: #9e9e9e; color: white; }
+    .btn-duzenle { background-color: #2196f3; color: white; }
+
+    .mesaj {
+      margin-top: 10px;
+      font-weight: bold;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
   <h1>📚 Kitap Listesi</h1>
 
-  <h2>Yeni Kitap Ekle</h2>
+  <h2 id="formBaslik">Yeni Kitap Ekle</h2>
   <form id="kitapForm">
     <input type="text" id="baslik" placeholder="Başlık" required />
     <input type="text" id="yazar" placeholder="Yazar" required />
     <input type="number" id="yayin_yili" placeholder="Yayın Yılı" required />
     <input type="number" id="sayfa_sayisi" placeholder="Sayfa Sayısı" required />
     <input type="text" id="tur" placeholder="Tür (opsiyonel)" />
-    <button type="submit">Ekle</button>
+    <button type="submit" id="formButton">📘 Ekle</button>
+    <button type="button" id="iptalButton" style="display:none;" onclick="iptalEt()">İptal</button>
   </form>
 
   <div class="mesaj" id="mesaj"></div>
 
-  <h2>Kitaplar</h2>
+  <h2>Mevcut Kitaplar</h2>
   <table id="kitaplarTable">
     <thead>
       <tr>
@@ -39,8 +134,9 @@
 
   <script>
     const apiUrl = 'http://127.0.0.1:8000';
+    let guncellemeModu = false;
+    let guncellenecekId = null;
 
-    // Mesaj göster
     function mesajGoster(text, hata=false) {
       const div = document.getElementById('mesaj');
       div.textContent = text;
@@ -48,7 +144,6 @@
       setTimeout(() => { div.textContent = ''; }, 4000);
     }
 
-    // Kitapları getir ve tabloyu güncelle
     async function kitaplariGetir() {
       const res = await fetch(apiUrl + '/kitaplar/');
       const kitaplar = await res.json();
@@ -67,16 +162,18 @@
           <td>${k.tur || 'Bilinmiyor'}</td>
           <td>${k.favori ? '⭐' : ''}</td>
           <td>
-            <button onclick="favoriEkle(${k.id})">Favori Ekle</button>
-            <button onclick="favoriKaldir(${k.id})">Favori Kaldır</button>
-            <button onclick="kitapSil(${k.id})">Sil</button>
+            <div class="button-group">
+              <button class="btn btn-favori" onclick="favoriEkle(${k.id})">⭐ Favori Ekle</button>
+              <button class="btn btn-kaldir" onclick="favoriKaldir(${k.id})">🚫 Favori Kaldır</button>
+              <button class="btn btn-sil" onclick="kitapSil(${k.id})">🗑️ Sil</button>
+              <button class="btn btn-duzenle" onclick="kitapDuzenle(${k.id})">📝 Güncelle</button>
+            </div>
           </td>
         `;
         tbody.appendChild(tr);
       });
     }
 
-    // Yeni kitap ekle
     document.getElementById('kitapForm').addEventListener('submit', async e => {
       e.preventDefault();
       const baslik = document.getElementById('baslik').value;
@@ -85,32 +182,73 @@
       const sayfa_sayisi = parseInt(document.getElementById('sayfa_sayisi').value);
       const tur = document.getElementById('tur').value || "Bilinmiyor";
 
+      const kitapData = { baslik, yazar, yayin_yili, sayfa_sayisi, tur };
+
       try {
-        const res = await fetch(apiUrl + '/kitap-ekle/', {
-          method: 'POST',
+        let url = apiUrl + '/kitap-ekle/';
+        let method = 'POST';
+        if (guncellemeModu) {
+          url = `${apiUrl}/kitap-guncelle/${guncellenecekId}`;
+          method = 'PUT';
+        }
+
+        const res = await fetch(url, {
+          method: method,
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ baslik, yazar, yayin_yili, sayfa_sayisi, tur })
+          body: JSON.stringify(kitapData)
         });
+
         if (!res.ok) {
           const err = await res.json();
           throw new Error(err.detail || 'Bir hata oluştu');
         }
+
         await kitaplariGetir();
-        mesajGoster('Kitap eklendi.');
+        mesajGoster(guncellemeModu ? 'Kitap güncellendi.' : 'Kitap eklendi.');
         e.target.reset();
+        if (guncellemeModu) iptalEt();
+
       } catch (error) {
         mesajGoster(error.message, true);
       }
     });
 
-    // Favori yap
+    function iptalEt() {
+      guncellemeModu = false;
+      guncellenecekId = null;
+      document.getElementById('formButton').textContent = '📘 Ekle';
+      document.getElementById('formBaslik').textContent = 'Yeni Kitap Ekle';
+      document.getElementById('iptalButton').style.display = 'none';
+      document.getElementById('kitapForm').reset();
+    }
+
+    async function kitapDuzenle(id) {
+      try {
+        const res = await fetch(`${apiUrl}/kitap/${id}`);
+        if (!res.ok) throw new Error('Kitap bulunamadı');
+        const kitap = await res.json();
+
+        document.getElementById('baslik').value = kitap.baslik;
+        document.getElementById('yazar').value = kitap.yazar;
+        document.getElementById('yayin_yili').value = kitap.yayin_yili;
+        document.getElementById('sayfa_sayisi').value = kitap.sayfa_sayisi;
+        document.getElementById('tur').value = kitap.tur;
+
+        guncellemeModu = true;
+        guncellenecekId = id;
+        document.getElementById('formButton').textContent = '📝 Güncelle';
+        document.getElementById('formBaslik').textContent = 'Kitabı Güncelle';
+        document.getElementById('iptalButton').style.display = 'inline-block';
+
+      } catch (error) {
+        mesajGoster(error.message, true);
+      }
+    }
+
     async function favoriEkle(id) {
       try {
         const res = await fetch(`${apiUrl}/kitap/${id}/favori/`, { method: 'POST' });
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.detail);
-        }
+        if (!res.ok) throw new Error((await res.json()).detail);
         mesajGoster('Favorilere eklendi.');
         kitaplariGetir();
       } catch (error) {
@@ -118,14 +256,10 @@
       }
     }
 
-    // Favori kaldır
     async function favoriKaldir(id) {
       try {
         const res = await fetch(`${apiUrl}/kitap/${id}/favori-kaldir/`, { method: 'POST' });
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.detail);
-        }
+        if (!res.ok) throw new Error((await res.json()).detail);
         mesajGoster('Favorilerden çıkarıldı.');
         kitaplariGetir();
       } catch (error) {
@@ -133,14 +267,10 @@
       }
     }
 
-    // Kitap sil
     async function kitapSil(id) {
       try {
         const res = await fetch(`${apiUrl}/kitap-sil/${id}`, { method: 'DELETE' });
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.detail);
-        }
+        if (!res.ok) throw new Error((await res.json()).detail);
         mesajGoster('Kitap silindi.');
         kitaplariGetir();
       } catch (error) {
@@ -148,7 +278,6 @@
       }
     }
 
-    // Sayfa açılır açılmaz kitapları listele
     kitaplariGetir();
   </script>
 </body>
