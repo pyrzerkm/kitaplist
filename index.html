@@ -359,6 +359,133 @@
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
+        /* Auth Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: rgba(255, 255, 255, 0.95);
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            backdrop-filter: blur(20px);
+            position: relative;
+        }
+
+        .close {
+            color: #666;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            position: absolute;
+            right: 20px;
+            top: 15px;
+        }
+
+        .close:hover {
+            color: #333;
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .auth-header h2 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #f0f0f0;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 12px 20px;
+            background: #f0f0f0;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .auth-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        .user-info {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            display: none;
+        }
+
+        .user-info.show {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-details h3 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .user-details p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .login-prompt {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .login-prompt h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .login-prompt p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 15px;
@@ -379,6 +506,11 @@
             .book-actions {
                 flex-direction: column;
             }
+
+            .modal-content {
+                width: 95%;
+                margin: 10% auto;
+            }
         }
     </style>
 </head>
@@ -389,7 +521,27 @@
             <p>Kitaplarınızı kolayca yönetin ve organize edin</p>
         </div>
 
-        <div id="mesaj"></div>
+    <div id="mesaj"></div>
+
+        <!-- Login Prompt (Giriş yapmayan kullanıcılar için) -->
+        <div id="loginPrompt" class="login-prompt">
+            <h2><i class="fas fa-lock"></i> Giriş Yapın</h2>
+            <p>Kitap yönetim sistemine erişmek için giriş yapmanız gerekiyor.</p>
+            <button onclick="showAuthModal()" class="btn btn-primary">
+                <i class="fas fa-sign-in-alt"></i> Giriş Yap / Kayıt Ol
+            </button>
+        </div>
+
+        <!-- User Info (Giriş yapmış kullanıcılar için) -->
+        <div id="userInfo" class="user-info">
+            <div class="user-details">
+                <h3 id="userName">Kullanıcı Adı</h3>
+                <p id="userEmail">email@example.com</p>
+            </div>
+            <button onclick="logout()" class="btn btn-danger">
+                <i class="fas fa-sign-out-alt"></i> Çıkış Yap
+            </button>
+        </div>
 
         <!-- İstatistik Kartları -->
         <div class="stats-cards">
@@ -415,10 +567,10 @@
             <input type="text" id="searchInput" class="search-input" placeholder="🔍 Kitap adı veya yazar ara...">
         </div>
 
-        <!-- Kitap Ekleme Formu -->
+    <!-- Kitap Ekleme Formu -->
         <div class="form-section">
             <h2><i class="fas fa-plus-circle"></i> Yeni Kitap Ekle</h2>
-            <form id="kitapEkleForm">
+    <form id="kitapEkleForm">
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="baslikEkle">Kitap Başlığı</label>
@@ -442,58 +594,58 @@
                     </div>
                     <div class="form-group">
                         <label for="kategoriEkle">Kategori</label>
-                        <select id="kategoriEkle" required>
+        <select id="kategoriEkle" required>
                             <option value="">Kategori Seçin</option>
-                            <option>Bilim ve Mühendislik</option>
-                            <option>Çocuk Kitapları</option>
-                            <option>Açık Kaynak Kitapları</option>
-                            <option>Dil Kitapları</option>
-                            <option>Tarih Kitapları</option>
-                        </select>
+            <option>Bilim ve Mühendislik</option>
+            <option>Çocuk Kitapları</option>
+            <option>Açık Kaynak Kitapları</option>
+            <option>Dil Kitapları</option>
+            <option>Tarih Kitapları</option>
+        </select>
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-plus"></i> Kitap Ekle
                 </button>
-            </form>
+    </form>
         </div>
 
-        <!-- Kitap Güncelleme Formu -->
+    <!-- Kitap Güncelleme Formu -->
         <div class="form-section" id="kitapGuncelleForm" style="display: none;">
             <h2><i class="fas fa-edit"></i> Kitap Güncelle</h2>
             <form id="guncelleForm">
-                <input type="hidden" id="kitapIdGuncelle">
+        <input type="hidden" id="kitapIdGuncelle">
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="baslikGuncelle">Kitap Başlığı</label>
-                        <input type="text" id="baslikGuncelle" required>
+        <input type="text" id="baslikGuncelle" required>
                     </div>
                     <div class="form-group">
                         <label for="yazarGuncelle">Yazar</label>
-                        <input type="text" id="yazarGuncelle" required>
+        <input type="text" id="yazarGuncelle" required>
                     </div>
                     <div class="form-group">
                         <label for="yayin_yiliGuncelle">Yayın Yılı</label>
-                        <input type="number" id="yayin_yiliGuncelle" required>
+        <input type="number" id="yayin_yiliGuncelle" required>
                     </div>
                     <div class="form-group">
                         <label for="sayfa_sayisiGuncelle">Sayfa Sayısı</label>
-                        <input type="number" id="sayfa_sayisiGuncelle" required>
+        <input type="number" id="sayfa_sayisiGuncelle" required>
                     </div>
                     <div class="form-group">
                         <label for="turGuncelle">Tür</label>
-                        <input type="text" id="turGuncelle">
+        <input type="text" id="turGuncelle">
                     </div>
                     <div class="form-group">
                         <label for="kategoriGuncelle">Kategori</label>
-                        <select id="kategoriGuncelle" required>
+        <select id="kategoriGuncelle" required>
                             <option value="">Kategori Seçin</option>
-                            <option>Bilim ve Mühendislik</option>
-                            <option>Çocuk Kitapları</option>
-                            <option>Açık Kaynak Kitapları</option>
-                            <option>Dil Kitapları</option>
-                            <option>Tarih Kitapları</option>
-                        </select>
+            <option>Bilim ve Mühendislik</option>
+            <option>Çocuk Kitapları</option>
+            <option>Açık Kaynak Kitapları</option>
+            <option>Dil Kitapları</option>
+            <option>Tarih Kitapları</option>
+        </select>
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary">
@@ -514,96 +666,303 @@
         </div>
     </div>
 
-    <script>
-        const apiUrl = "http://localhost:8000";
+    <!-- Authentication Modal -->
+    <div id="authModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeAuthModal()">&times;</span>
+            
+            <div class="auth-header">
+                <h2><i class="fas fa-user-circle"></i> Hesap İşlemleri</h2>
+            </div>
+
+            <div class="auth-tabs">
+                <button class="auth-tab active" onclick="showLoginForm()">Giriş Yap</button>
+                <button class="auth-tab" onclick="showRegisterForm()">Kayıt Ol</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" class="auth-form active">
+                <div class="form-group">
+                    <label for="loginUsername">Kullanıcı Adı</label>
+                    <input type="text" id="loginUsername" required placeholder="Kullanıcı adınızı girin">
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Şifre</label>
+                    <input type="password" id="loginPassword" required placeholder="Şifrenizi girin">
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-sign-in-alt"></i> Giriş Yap
+                </button>
+    </form>
+
+            <!-- Register Form -->
+            <form id="registerForm" class="auth-form">
+                <div class="form-group">
+                    <label for="registerUsername">Kullanıcı Adı</label>
+                    <input type="text" id="registerUsername" required placeholder="Kullanıcı adı seçin">
+                </div>
+                <div class="form-group">
+                    <label for="registerEmail">E-mail</label>
+                    <input type="email" id="registerEmail" required placeholder="E-mail adresinizi girin">
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">Şifre</label>
+                    <input type="password" id="registerPassword" required placeholder="Güçlü bir şifre seçin">
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-user-plus"></i> Kayıt Ol
+                </button>
+            </form>
+        </div>
+    </div>
+
+<script>
+    const apiUrl = "http://localhost:8000";
         let allBooks = [];
+        let currentUser = null;
+        let authToken = localStorage.getItem('authToken');
 
-        // Kitap Ekleme formu
-        document.getElementById('kitapEkleForm').addEventListener('submit', async function(e) {
+        // Authentication Functions
+        function showAuthModal() {
+            document.getElementById('authModal').style.display = 'block';
+        }
+
+        function closeAuthModal() {
+            document.getElementById('authModal').style.display = 'none';
+        }
+
+        function showLoginForm() {
+            document.querySelector('.auth-tab.active').classList.remove('active');
+            document.querySelector('.auth-form.active').classList.remove('active');
+            
+            document.querySelectorAll('.auth-tab')[0].classList.add('active');
+            document.getElementById('loginForm').classList.add('active');
+        }
+
+        function showRegisterForm() {
+            document.querySelector('.auth-tab.active').classList.remove('active');
+            document.querySelector('.auth-form.active').classList.remove('active');
+            
+            document.querySelectorAll('.auth-tab')[1].classList.add('active');
+            document.getElementById('registerForm').classList.add('active');
+        }
+
+        // Login Form Handler
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-
-            const baslik = document.getElementById('baslikEkle').value;
-            const yazar = document.getElementById('yazarEkle').value;
-            const yayin_yili = parseInt(document.getElementById('yayin_yiliEkle').value);
-            const sayfa_sayisi = parseInt(document.getElementById('sayfa_sayisiEkle').value);
-            const tur = document.getElementById('turEkle').value;
-            const kategori = document.getElementById('kategoriEkle').value;
-
-            if (!kategori) {
-                mesajGoster("⚠️ Kategori seçmelisiniz!", true);
-                return;
-            }
-
-            const kitap = { baslik, yazar, yayin_yili, sayfa_sayisi, tur, kategori };
-
+            
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            const formData = new FormData();
+            formData.append('username', username);
+            formData.append('password', password);
+            
             try {
-                const response = await fetch(`${apiUrl}/kitap-ekle/`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(kitap),
+                const response = await fetch(`${apiUrl}/login/`, {
+                    method: 'POST',
+                    body: formData
                 });
-
+                
                 const data = await response.json();
-
-                if (!response.ok) {
-                    mesajGoster("⚠️ " + data.detail, true);
-                    return;
+                
+                if (response.ok) {
+                    authToken = data.access_token;
+                    currentUser = data.user;
+                    localStorage.setItem('authToken', authToken);
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    
+                    updateUIForLoggedInUser();
+                    closeAuthModal();
+                    mesajGoster('✅ Başarıyla giriş yaptınız!');
+                    kitaplariYukle();
+                } else {
+                    mesajGoster('❌ ' + data.detail, true);
                 }
-
-                mesajGoster("✅ Kitap başarıyla eklendi!");
-                this.reset();
-                kitaplariYukle();
             } catch (error) {
-                mesajGoster("❌ Hata oluştu!", true);
+                mesajGoster('❌ Giriş yapılırken hata oluştu!', true);
             }
         });
 
-        // Kitap Güncelleme formu
+        // Register Form Handler
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('registerUsername').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            
+            try {
+                const response = await fetch(`${apiUrl}/register/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        email: email,
+                        password: password
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    mesajGoster('✅ Başarıyla kayıt oldunuz! Şimdi giriş yapabilirsiniz.');
+                    showLoginForm();
+                    document.getElementById('registerForm').reset();
+                } else {
+                    mesajGoster('❌ ' + data.detail, true);
+                }
+            } catch (error) {
+                mesajGoster('❌ Kayıt olurken hata oluştu!', true);
+            }
+        });
+
+        function logout() {
+            authToken = null;
+            currentUser = null;
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('currentUser');
+            updateUIForLoggedOutUser();
+            mesajGoster('✅ Başarıyla çıkış yaptınız!');
+        }
+
+        function updateUIForLoggedInUser() {
+            document.getElementById('loginPrompt').style.display = 'none';
+            document.getElementById('userInfo').classList.add('show');
+            document.getElementById('userName').textContent = currentUser.username;
+            document.getElementById('userEmail').textContent = currentUser.email;
+            
+            // Form ve kitap listesini göster
+            document.querySelectorAll('.form-section').forEach(el => el.style.display = 'block');
+            document.querySelector('.stats-cards').style.display = 'grid';
+            document.querySelector('.search-bar').style.display = 'block';
+        }
+
+        function updateUIForLoggedOutUser() {
+            document.getElementById('loginPrompt').style.display = 'block';
+            document.getElementById('userInfo').classList.remove('show');
+            
+            // Form ve kitap listesini gizle
+            document.querySelectorAll('.form-section').forEach(el => el.style.display = 'none');
+            document.querySelector('.stats-cards').style.display = 'none';
+            document.querySelector('.search-bar').style.display = 'none';
+            document.getElementById('kitaplarContainer').innerHTML = '';
+        }
+
+        // API çağrılarına Authorization header ekle
+        async function authenticatedFetch(url, options = {}) {
+            if (!authToken) {
+                throw new Error('Token bulunamadı');
+            }
+            
+            const headers = {
+                'Authorization': `Bearer ${authToken}`,
+                ...options.headers
+            };
+            
+            return fetch(url, { ...options, headers });
+        }
+
+        // Sayfa yüklendiğinde authentication durumunu kontrol et
+        function checkAuthStatus() {
+            const savedUser = localStorage.getItem('currentUser');
+            if (authToken && savedUser) {
+                currentUser = JSON.parse(savedUser);
+                updateUIForLoggedInUser();
+                kitaplariYukle();
+            } else {
+                updateUIForLoggedOutUser();
+            }
+        }
+
+    // Kitap Ekleme formu
+    document.getElementById('kitapEkleForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const baslik = document.getElementById('baslikEkle').value;
+        const yazar = document.getElementById('yazarEkle').value;
+        const yayin_yili = parseInt(document.getElementById('yayin_yiliEkle').value);
+        const sayfa_sayisi = parseInt(document.getElementById('sayfa_sayisiEkle').value);
+        const tur = document.getElementById('turEkle').value;
+        const kategori = document.getElementById('kategoriEkle').value;
+
+        if (!kategori) {
+            mesajGoster("⚠️ Kategori seçmelisiniz!", true);
+            return;
+        }
+
+        const kitap = { baslik, yazar, yayin_yili, sayfa_sayisi, tur, kategori };
+
+        try {
+                const response = await authenticatedFetch(`${apiUrl}/kitap-ekle/`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(kitap),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                mesajGoster("⚠️ " + data.detail, true);
+                return;
+            }
+
+            mesajGoster("✅ Kitap başarıyla eklendi!");
+            this.reset();
+            kitaplariYukle();
+        } catch (error) {
+            mesajGoster("❌ Hata oluştu!", true);
+        }
+    });
+
+    // Kitap Güncelleme formu
         document.getElementById('guncelleForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
+        e.preventDefault();
 
-            const kitapId = document.getElementById('kitapIdGuncelle').value;
-            const baslik = document.getElementById('baslikGuncelle').value;
-            const yazar = document.getElementById('yazarGuncelle').value;
-            const yayin_yili = parseInt(document.getElementById('yayin_yiliGuncelle').value);
-            const sayfa_sayisi = parseInt(document.getElementById('sayfa_sayisiGuncelle').value);
-            const tur = document.getElementById('turGuncelle').value;
-            const kategori = document.getElementById('kategoriGuncelle').value;
+        const kitapId = document.getElementById('kitapIdGuncelle').value;
+        const baslik = document.getElementById('baslikGuncelle').value;
+        const yazar = document.getElementById('yazarGuncelle').value;
+        const yayin_yili = parseInt(document.getElementById('yayin_yiliGuncelle').value);
+        const sayfa_sayisi = parseInt(document.getElementById('sayfa_sayisiGuncelle').value);
+        const tur = document.getElementById('turGuncelle').value;
+        const kategori = document.getElementById('kategoriGuncelle').value;
 
-            if (!kategori) {
-                mesajGoster("⚠️ Kategori seçmelisiniz!", true);
+        if (!kategori) {
+            mesajGoster("⚠️ Kategori seçmelisiniz!", true);
+            return;
+        }
+
+        const kitap = { baslik, yazar, yayin_yili, sayfa_sayisi, tur, kategori };
+
+        try {
+                const response = await authenticatedFetch(`${apiUrl}/kitap-guncelle/${kitapId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(kitap),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                mesajGoster("⚠️ " + data.detail, true);
                 return;
             }
 
-            const kitap = { baslik, yazar, yayin_yili, sayfa_sayisi, tur, kategori };
-
-            try {
-                const response = await fetch(`${apiUrl}/kitap-guncelle/${kitapId}`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(kitap),
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    mesajGoster("⚠️ " + data.detail, true);
-                    return;
-                }
-
-                mesajGoster("✅ Kitap başarıyla güncellendi!");
-                this.reset();
-                document.getElementById('kitapGuncelleForm').style.display = "none";
-                kitaplariYukle();
-            } catch (error) {
-                mesajGoster("❌ Hata oluştu!", true);
-            }
-        });
+            mesajGoster("✅ Kitap başarıyla güncellendi!");
+            this.reset();
+            document.getElementById('kitapGuncelleForm').style.display = "none";
+            kitaplariYukle();
+        } catch (error) {
+            mesajGoster("❌ Hata oluştu!", true);
+        }
+    });
 
         // İptal butonu
-        document.getElementById('iptalGuncelle').addEventListener('click', function() {
-            document.getElementById('kitapGuncelleForm').style.display = "none";
-        });
+    document.getElementById('iptalGuncelle').addEventListener('click', function() {
+        document.getElementById('kitapGuncelleForm').style.display = "none";
+    });
 
         // Arama fonksiyonu
         document.getElementById('searchInput').addEventListener('input', function() {
@@ -615,10 +974,10 @@
             kitaplariGoster(filteredBooks);
         });
 
-        // Kitapları yükleme
-        async function kitaplariYukle() {
+    // Kitapları yükleme
+    async function kitaplariYukle() {
             try {
-                const response = await fetch(`${apiUrl}/kitaplar/`);
+                const response = await authenticatedFetch(`${apiUrl}/kitaplar/`);
                 allBooks = await response.json();
                 kitaplariGoster(allBooks);
                 istatistikleriGuncelle();
@@ -682,7 +1041,7 @@
                                 </button>
                                 <button onclick="kitapSil(${kitap.id})" class="btn btn-danger">
                                     <i class="fas fa-trash"></i> Sil
-                                </button>
+                    </button>
                             </div>
                         </div>
                     `).join('')}
@@ -700,64 +1059,72 @@
         }
 
         // Kitap güncelleme
-        async function kitapguncelle(id) {
+    async function kitapguncelle(id) {
             try {
-                const res = await fetch(`${apiUrl}/kitap/${id}`);
-                const kitap = await res.json();
+                const res = await authenticatedFetch(`${apiUrl}/kitap/${id}`);
+        const kitap = await res.json();
 
-                document.getElementById('kitapIdGuncelle').value = kitap.id;
-                document.getElementById('baslikGuncelle').value = kitap.baslik;
-                document.getElementById('yazarGuncelle').value = kitap.yazar;
-                document.getElementById('yayin_yiliGuncelle').value = kitap.yayin_yili;
-                document.getElementById('sayfa_sayisiGuncelle').value = kitap.sayfa_sayisi;
-                document.getElementById('turGuncelle').value = kitap.tur;
-                document.getElementById('kategoriGuncelle').value = kitap.kategori;
+        document.getElementById('kitapIdGuncelle').value = kitap.id;
+        document.getElementById('baslikGuncelle').value = kitap.baslik;
+        document.getElementById('yazarGuncelle').value = kitap.yazar;
+        document.getElementById('yayin_yiliGuncelle').value = kitap.yayin_yili;
+        document.getElementById('sayfa_sayisiGuncelle').value = kitap.sayfa_sayisi;
+        document.getElementById('turGuncelle').value = kitap.tur;
+        document.getElementById('kategoriGuncelle').value = kitap.kategori;
 
-                document.getElementById('kitapGuncelleForm').style.display = "block";
+        document.getElementById('kitapGuncelleForm').style.display = "block";
                 document.getElementById('kitapGuncelleForm').scrollIntoView({ behavior: 'smooth' });
             } catch (error) {
                 mesajGoster("❌ Kitap bilgileri yüklenirken hata oluştu!", true);
             }
-        }
+    }
 
         // Kitap silme
-        async function kitapSil(id) {
+    async function kitapSil(id) {
             if (!confirm("Bu kitabı silmek istediğinizden emin misiniz?")) return;
             
             try {
-                await fetch(`${apiUrl}/kitap-sil/${id}`, { method: "DELETE" });
+                await authenticatedFetch(`${apiUrl}/kitap-sil/${id}`, { method: "DELETE" });
                 mesajGoster("✅ Kitap başarıyla silindi!");
-                kitaplariYukle();
+        kitaplariYukle();
             } catch (error) {
                 mesajGoster("❌ Kitap silinirken hata oluştu!", true);
             }
-        }
+    }
 
         // Favori değiştirme
-        async function favoriDegistir(id, favoriMi) {
+    async function favoriDegistir(id, favoriMi) {
             try {
-                const url = favoriMi
-                    ? `${apiUrl}/kitap/${id}/favori-kaldir/`
-                    : `${apiUrl}/kitap/${id}/favori/`;
-                await fetch(url, { method: "POST" });
-                kitaplariYukle();
+        const url = favoriMi
+            ? `${apiUrl}/kitap/${id}/favori-kaldir/`
+            : `${apiUrl}/kitap/${id}/favori/`;
+                await authenticatedFetch(url, { method: "POST" });
+        kitaplariYukle();
             } catch (error) {
                 mesajGoster("❌ Favori durumu değiştirilirken hata oluştu!", true);
             }
-        }
+    }
 
         // Mesaj gösterme
-        function mesajGoster(mesaj, hata = false) {
-            const mesajDiv = document.getElementById("mesaj");
+    function mesajGoster(mesaj, hata = false) {
+        const mesajDiv = document.getElementById("mesaj");
             mesajDiv.innerHTML = `<div class="message ${hata ? 'error' : 'success'}">${mesaj}</div>`;
             
-            setTimeout(() => {
+        setTimeout(() => {
                 mesajDiv.innerHTML = '';
             }, 4000);
         }
 
-        // Sayfa yüklendiğinde kitapları yükle
-        kitaplariYukle();
-    </script>
+        // Sayfa yüklendiğinde authentication durumunu kontrol et
+        checkAuthStatus();
+
+        // Modal dışına tıklandığında kapat
+        window.onclick = function(event) {
+            const modal = document.getElementById('authModal');
+            if (event.target === modal) {
+                closeAuthModal();
+            }
+        }
+</script>
 </body>
 </html>
