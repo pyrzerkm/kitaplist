@@ -1,278 +1,763 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8" />
-    <title>Kitap Listesi</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📚 Kitap Yönetim Sistemi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* Aynı stil kodları */
-        body { font-family: Arial, sans-serif; background-color: #f0f4f8; margin: 0; padding: 20px;}
-        h1 { color: #333; text-align: center; }
-        form, table { max-width: 800px; margin: auto; margin-bottom: 20px; }
-        label { display: block; margin-top: 10px; }
-        input, select { width: 100%; padding: 8px; margin-top: 4px; }
-        button { margin-top: 12px; padding: 10px 15px; cursor: pointer; }
-        table { margin-top: 30px; width: 100%; border-collapse: collapse; }
-        th, td { padding: 10px; background-color: #fff; border: 1px solid #ccc; }
-        th { background-color: #e0e0e0; }
-        .actions button { margin: 2px; }
-        .favori { color: goldenrod; }
-        .error { color: red; text-align: center; }
-        .success { color: green; text-align: center; }
-        /* Güncelleme formunu başlangıçta gizle */
-        #kitapGuncelleForm { display: none; border: 1px solid #ccc; padding: 15px; background: #fff; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card i {
+            font-size: 2rem;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .stat-card h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .stat-card p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .form-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .form-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #333;
+            border: 2px solid #e1e5e9;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .books-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .book-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .book-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+
+        .book-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .book-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .book-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .book-author {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .book-favorite {
+            color: #ffd700;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .book-favorite:hover {
+            transform: scale(1.2);
+        }
+
+        .book-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .book-detail {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .book-detail i {
+            color: #667eea;
+            width: 16px;
+        }
+
+        .book-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .book-actions .btn {
+            flex: 1;
+            min-width: 80px;
+            font-size: 0.85rem;
+            padding: 8px 12px;
+        }
+
+        .message {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 500;
+            text-align: center;
+            animation: slideIn 0.3s ease;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .loading i {
+            font-size: 2rem;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .update-form {
+            display: none;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #e1e5e9;
+        }
+
+        .search-bar {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .books-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .book-actions {
+                flex-direction: column;
+            }
+        }
     </style>
 </head>
 <body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-book-open"></i> Kitap Yönetim Sistemi</h1>
+            <p>Kitaplarınızı kolayca yönetin ve organize edin</p>
+        </div>
 
-    <h1>📚 Kitap Listesi</h1>
+        <div id="mesaj"></div>
 
-    <div id="mesaj"></div>
+        <!-- İstatistik Kartları -->
+        <div class="stats-cards">
+            <div class="stat-card">
+                <i class="fas fa-books"></i>
+                <h3 id="totalBooks">0</h3>
+                <p>Toplam Kitap</p>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-heart"></i>
+                <h3 id="favoriteBooks">0</h3>
+                <p>Favori Kitap</p>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-layer-group"></i>
+                <h3 id="totalCategories">5</h3>
+                <p>Kategori</p>
+            </div>
+        </div>
 
-    <!-- Kitap Ekleme Formu -->
-    <form id="kitapEkleForm">
-        <h2>Yeni Kitap Ekle</h2>
-        <label for="baslikEkle">Başlık:</label>
-        <input type="text" id="baslikEkle" required>
+        <!-- Arama Çubuğu -->
+        <div class="search-bar">
+            <input type="text" id="searchInput" class="search-input" placeholder="🔍 Kitap adı veya yazar ara...">
+        </div>
 
-        <label for="yazarEkle">Yazar:</label>
-        <input type="text" id="yazarEkle" required>
+        <!-- Kitap Ekleme Formu -->
+        <div class="form-section">
+            <h2><i class="fas fa-plus-circle"></i> Yeni Kitap Ekle</h2>
+            <form id="kitapEkleForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="baslikEkle">Kitap Başlığı</label>
+                        <input type="text" id="baslikEkle" required placeholder="Kitap adını girin">
+                    </div>
+                    <div class="form-group">
+                        <label for="yazarEkle">Yazar</label>
+                        <input type="text" id="yazarEkle" required placeholder="Yazar adını girin">
+                    </div>
+                    <div class="form-group">
+                        <label for="yayin_yiliEkle">Yayın Yılı</label>
+                        <input type="number" id="yayin_yiliEkle" required placeholder="2024">
+                    </div>
+                    <div class="form-group">
+                        <label for="sayfa_sayisiEkle">Sayfa Sayısı</label>
+                        <input type="number" id="sayfa_sayisiEkle" required placeholder="300">
+                    </div>
+                    <div class="form-group">
+                        <label for="turEkle">Tür</label>
+                        <input type="text" id="turEkle" placeholder="Roman, Bilim Kurgu, vb.">
+                    </div>
+                    <div class="form-group">
+                        <label for="kategoriEkle">Kategori</label>
+                        <select id="kategoriEkle" required>
+                            <option value="">Kategori Seçin</option>
+                            <option>Bilim ve Mühendislik</option>
+                            <option>Çocuk Kitapları</option>
+                            <option>Açık Kaynak Kitapları</option>
+                            <option>Dil Kitapları</option>
+                            <option>Tarih Kitapları</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Kitap Ekle
+                </button>
+            </form>
+        </div>
 
-        <label for="yayin_yiliEkle">Yayın Yılı:</label>
-        <input type="number" id="yayin_yiliEkle" required>
+        <!-- Kitap Güncelleme Formu -->
+        <div class="form-section" id="kitapGuncelleForm" style="display: none;">
+            <h2><i class="fas fa-edit"></i> Kitap Güncelle</h2>
+            <form id="guncelleForm">
+                <input type="hidden" id="kitapIdGuncelle">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="baslikGuncelle">Kitap Başlığı</label>
+                        <input type="text" id="baslikGuncelle" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="yazarGuncelle">Yazar</label>
+                        <input type="text" id="yazarGuncelle" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="yayin_yiliGuncelle">Yayın Yılı</label>
+                        <input type="number" id="yayin_yiliGuncelle" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="sayfa_sayisiGuncelle">Sayfa Sayısı</label>
+                        <input type="number" id="sayfa_sayisiGuncelle" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="turGuncelle">Tür</label>
+                        <input type="text" id="turGuncelle">
+                    </div>
+                    <div class="form-group">
+                        <label for="kategoriGuncelle">Kategori</label>
+                        <select id="kategoriGuncelle" required>
+                            <option value="">Kategori Seçin</option>
+                            <option>Bilim ve Mühendislik</option>
+                            <option>Çocuk Kitapları</option>
+                            <option>Açık Kaynak Kitapları</option>
+                            <option>Dil Kitapları</option>
+                            <option>Tarih Kitapları</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Güncelle
+                </button>
+                <button type="button" id="iptalGuncelle" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> İptal
+                </button>
+            </form>
+        </div>
 
-        <label for="sayfa_sayisiEkle">Sayfa Sayısı:</label>
-        <input type="number" id="sayfa_sayisiEkle" required>
+        <!-- Kitaplar Listesi -->
+        <div id="kitaplarContainer">
+            <div class="loading">
+                <i class="fas fa-spinner"></i>
+                <p>Kitaplar yükleniyor...</p>
+            </div>
+        </div>
+    </div>
 
-        <label for="turEkle">Tür:</label>
-        <input type="text" id="turEkle">
+    <script>
+        const apiUrl = "http://localhost:8000";
+        let allBooks = [];
 
-        <label for="kategoriEkle">Kategori:</label>
-        <select id="kategoriEkle" required>
-            <option value="">Kategori Seç</option>
-            <option>Bilim ve Mühendislik</option>
-            <option>Çocuk Kitapları</option>
-            <option>Açık Kaynak Kitapları</option>
-            <option>Dil Kitapları</option>
-            <option>Tarih Kitapları</option>
-        </select>
+        // Kitap Ekleme formu
+        document.getElementById('kitapEkleForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
 
-        <button type="submit">📌 Kitap Ekle</button>
-    </form>
+            const baslik = document.getElementById('baslikEkle').value;
+            const yazar = document.getElementById('yazarEkle').value;
+            const yayin_yili = parseInt(document.getElementById('yayin_yiliEkle').value);
+            const sayfa_sayisi = parseInt(document.getElementById('sayfa_sayisiEkle').value);
+            const tur = document.getElementById('turEkle').value;
+            const kategori = document.getElementById('kategoriEkle').value;
 
-    <!-- Kitap Güncelleme Formu -->
-    <form id="kitapGuncelleForm">
-        <h2>Kitap Güncelle</h2>
-        <input type="hidden" id="kitapIdGuncelle">
-
-        <label for="baslikGuncelle">Başlık:</label>
-        <input type="text" id="baslikGuncelle" required>
-
-        <label for="yazarGuncelle">Yazar:</label>
-        <input type="text" id="yazarGuncelle" required>
-
-        <label for="yayin_yiliGuncelle">Yayın Yılı:</label>
-        <input type="number" id="yayin_yiliGuncelle" required>
-
-        <label for="sayfa_sayisiGuncelle">Sayfa Sayısı:</label>
-        <input type="number" id="sayfa_sayisiGuncelle" required>
-
-        <label for="turGuncelle">Tür:</label>
-        <input type="text" id="turGuncelle">
-
-        <label for="kategoriGuncelle">Kategori:</label>
-        <select id="kategoriGuncelle" required>
-            <option value="">Kategori Seç</option>
-            <option>Bilim ve Mühendislik</option>
-            <option>Çocuk Kitapları</option>
-            <option>Açık Kaynak Kitapları</option>
-            <option>Dil Kitapları</option>
-            <option>Tarih Kitapları</option>
-        </select>
-
-        <button type="submit">💾 Güncelle</button>
-        <button type="button" id="iptalGuncelle">❌ İptal</button>
-    </form>
-
-    <table id="kitaplarTablosu">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Başlık</th>
-                <th>Yazar</th>
-                <th>Yıl</th>
-                <th>Sayfa</th>
-                <th>Tür</th>
-                <th>Kategori</th>
-                <th>Favori</th>
-                <th>İşlemler</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
-
-<script>
-    const apiUrl = "http://localhost:8000";
-
-    // Kitap Ekleme formu
-    document.getElementById('kitapEkleForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-
-        const baslik = document.getElementById('baslikEkle').value;
-        const yazar = document.getElementById('yazarEkle').value;
-        const yayin_yili = parseInt(document.getElementById('yayin_yiliEkle').value);
-        const sayfa_sayisi = parseInt(document.getElementById('sayfa_sayisiEkle').value);
-        const tur = document.getElementById('turEkle').value;
-        const kategori = document.getElementById('kategoriEkle').value;
-
-        if (!kategori) {
-            mesajGoster("⚠️ Kategori seçmelisiniz!", true);
-            return;
-        }
-
-        const kitap = { baslik, yazar, yayin_yili, sayfa_sayisi, tur, kategori };
-
-        try {
-            const response = await fetch(`${apiUrl}/kitap-ekle/`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(kitap),
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                mesajGoster("⚠️ " + data.detail, true);
+            if (!kategori) {
+                mesajGoster("⚠️ Kategori seçmelisiniz!", true);
                 return;
             }
 
-            mesajGoster("✅ Kitap başarıyla eklendi!");
-            this.reset();
-            kitaplariYukle();
-        } catch (error) {
-            mesajGoster("❌ Hata oluştu!", true);
-        }
-    });
+            const kitap = { baslik, yazar, yayin_yili, sayfa_sayisi, tur, kategori };
 
-    // Kitap Güncelleme formu
-    document.getElementById('kitapGuncelleForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
+            try {
+                const response = await fetch(`${apiUrl}/kitap-ekle/`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(kitap),
+                });
 
-        const kitapId = document.getElementById('kitapIdGuncelle').value;
-        const baslik = document.getElementById('baslikGuncelle').value;
-        const yazar = document.getElementById('yazarGuncelle').value;
-        const yayin_yili = parseInt(document.getElementById('yayin_yiliGuncelle').value);
-        const sayfa_sayisi = parseInt(document.getElementById('sayfa_sayisiGuncelle').value);
-        const tur = document.getElementById('turGuncelle').value;
-        const kategori = document.getElementById('kategoriGuncelle').value;
+                const data = await response.json();
 
-        if (!kategori) {
-            mesajGoster("⚠️ Kategori seçmelisiniz!", true);
-            return;
-        }
+                if (!response.ok) {
+                    mesajGoster("⚠️ " + data.detail, true);
+                    return;
+                }
 
-        const kitap = { baslik, yazar, yayin_yili, sayfa_sayisi, tur, kategori };
-
-        try {
-            const response = await fetch(`${apiUrl}/kitap-guncelle/${kitapId}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(kitap),
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                mesajGoster("⚠️ " + data.detail, true);
-                return;
+                mesajGoster("✅ Kitap başarıyla eklendi!");
+                this.reset();
+                kitaplariYukle();
+            } catch (error) {
+                mesajGoster("❌ Hata oluştu!", true);
             }
-
-            mesajGoster("✅ Kitap başarıyla güncellendi!");
-            this.reset();
-            document.getElementById('kitapGuncelleForm').style.display = "none";
-            kitaplariYukle();
-        } catch (error) {
-            mesajGoster("❌ Hata oluştu!", true);
-        }
-    });
-
-    // İptal butonu güncelleme formunda
-    document.getElementById('iptalGuncelle').addEventListener('click', function() {
-        document.getElementById('kitapGuncelleForm').style.display = "none";
-    });
-
-    // Kitapları yükleme
-    async function kitaplariYukle() {
-        const response = await fetch(`${apiUrl}/kitaplar/`);
-        const kitaplar = await response.json();
-        const tbody = document.querySelector('#kitaplarTablosu tbody');
-        tbody.innerHTML = "";
-
-        kitaplar.forEach(k => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${k.id}</td>
-                <td>${k.baslik}</td>
-                <td>${k.yazar}</td>
-                <td>${k.yayin_yili}</td>
-                <td>${k.sayfa_sayisi}</td>
-                <td>${k.tur}</td>
-                <td>${k.kategori}</td>
-                <td class="${k.favori ? 'favori' : ''}">${k.favori ? "⭐" : ""}</td>
-                <td class="actions">
-                    <button onclick="kitapguncelle(${k.id})">✏️ Güncelle
-                    <button onclick="kitapSil(${k.id})">🗑️ Sil</button>
-                    <button onclick="favoriDegistir(${k.id}, ${k.favori})">
-                        ${k.favori ? "💔 Favoriden Çıkar" : "💖 Favori Yap"}
-                    </button>
-                </td>
-            `;
-            tbody.appendChild(tr);
         });
-    }
 
-    // guncelleme butonuna basınca güncelleme formunu doldurup göster
-    async function kitapguncelle(id) {
-        const res = await fetch(`${apiUrl}/kitap/${id}`);
-        const kitap = await res.json();
+        // Kitap Güncelleme formu
+        document.getElementById('guncelleForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
 
-        document.getElementById('kitapIdGuncelle').value = kitap.id;
-        document.getElementById('baslikGuncelle').value = kitap.baslik;
-        document.getElementById('yazarGuncelle').value = kitap.yazar;
-        document.getElementById('yayin_yiliGuncelle').value = kitap.yayin_yili;
-        document.getElementById('sayfa_sayisiGuncelle').value = kitap.sayfa_sayisi;
-        document.getElementById('turGuncelle').value = kitap.tur;
-        document.getElementById('kategoriGuncelle').value = kitap.kategori;
+            const kitapId = document.getElementById('kitapIdGuncelle').value;
+            const baslik = document.getElementById('baslikGuncelle').value;
+            const yazar = document.getElementById('yazarGuncelle').value;
+            const yayin_yili = parseInt(document.getElementById('yayin_yiliGuncelle').value);
+            const sayfa_sayisi = parseInt(document.getElementById('sayfa_sayisiGuncelle').value);
+            const tur = document.getElementById('turGuncelle').value;
+            const kategori = document.getElementById('kategoriGuncelle').value;
 
-        document.getElementById('kitapGuncelleForm').style.display = "block";
-        window.scrollTo(0, document.body.scrollHeight);
-    }
+            if (!kategori) {
+                mesajGoster("⚠️ Kategori seçmelisiniz!", true);
+                return;
+            }
 
-    async function kitapSil(id) {
-        if (!confirm("Kitap silinsin mi?")) return;
-        await fetch(`${apiUrl}/kitap-sil/${id}`, { method: "DELETE" });
+            const kitap = { baslik, yazar, yayin_yili, sayfa_sayisi, tur, kategori };
+
+            try {
+                const response = await fetch(`${apiUrl}/kitap-guncelle/${kitapId}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(kitap),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    mesajGoster("⚠️ " + data.detail, true);
+                    return;
+                }
+
+                mesajGoster("✅ Kitap başarıyla güncellendi!");
+                this.reset();
+                document.getElementById('kitapGuncelleForm').style.display = "none";
+                kitaplariYukle();
+            } catch (error) {
+                mesajGoster("❌ Hata oluştu!", true);
+            }
+        });
+
+        // İptal butonu
+        document.getElementById('iptalGuncelle').addEventListener('click', function() {
+            document.getElementById('kitapGuncelleForm').style.display = "none";
+        });
+
+        // Arama fonksiyonu
+        document.getElementById('searchInput').addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const filteredBooks = allBooks.filter(book => 
+                book.baslik.toLowerCase().includes(searchTerm) ||
+                book.yazar.toLowerCase().includes(searchTerm)
+            );
+            kitaplariGoster(filteredBooks);
+        });
+
+        // Kitapları yükleme
+        async function kitaplariYukle() {
+            try {
+                const response = await fetch(`${apiUrl}/kitaplar/`);
+                allBooks = await response.json();
+                kitaplariGoster(allBooks);
+                istatistikleriGuncelle();
+            } catch (error) {
+                document.getElementById('kitaplarContainer').innerHTML = 
+                    '<div class="message error">❌ Kitaplar yüklenirken hata oluştu!</div>';
+            }
+        }
+
+        // Kitapları gösterme
+        function kitaplariGoster(kitaplar) {
+            const container = document.getElementById('kitaplarContainer');
+            
+            if (kitaplar.length === 0) {
+                container.innerHTML = `
+                    <div class="form-section">
+                        <div style="text-align: center; padding: 40px; color: #666;">
+                            <i class="fas fa-book" style="font-size: 3rem; margin-bottom: 20px; opacity: 0.5;"></i>
+                            <h3>Henüz kitap eklenmemiş</h3>
+                            <p>İlk kitabınızı ekleyerek başlayın!</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="books-grid">
+                    ${kitaplar.map(kitap => `
+                        <div class="book-card">
+                            <div class="book-header">
+                                <div>
+                                    <div class="book-title">${kitap.baslik}</div>
+                                    <div class="book-author">${kitap.yazar}</div>
+                                </div>
+                                <div class="book-favorite" onclick="favoriDegistir(${kitap.id}, ${kitap.favori})">
+                                    ${kitap.favori ? '<i class="fas fa-heart"></i>' : '<i class="far fa-heart"></i>'}
+                                </div>
+                            </div>
+                            <div class="book-details">
+                                <div class="book-detail">
+                                    <i class="fas fa-calendar"></i>
+                                    <span>${kitap.yayin_yili}</span>
+                                </div>
+                                <div class="book-detail">
+                                    <i class="fas fa-file-alt"></i>
+                                    <span>${kitap.sayfa_sayisi} sayfa</span>
+                                </div>
+                                <div class="book-detail">
+                                    <i class="fas fa-tag"></i>
+                                    <span>${kitap.tur || 'Belirtilmemiş'}</span>
+                                </div>
+                                <div class="book-detail">
+                                    <i class="fas fa-layer-group"></i>
+                                    <span>${kitap.kategori}</span>
+                                </div>
+                            </div>
+                            <div class="book-actions">
+                                <button onclick="kitapguncelle(${kitap.id})" class="btn btn-secondary">
+                                    <i class="fas fa-edit"></i> Düzenle
+                                </button>
+                                <button onclick="kitapSil(${kitap.id})" class="btn btn-danger">
+                                    <i class="fas fa-trash"></i> Sil
+                                </button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // İstatistikleri güncelleme
+        function istatistikleriGuncelle() {
+            const totalBooks = allBooks.length;
+            const favoriteBooks = allBooks.filter(book => book.favori).length;
+            
+            document.getElementById('totalBooks').textContent = totalBooks;
+            document.getElementById('favoriteBooks').textContent = favoriteBooks;
+        }
+
+        // Kitap güncelleme
+        async function kitapguncelle(id) {
+            try {
+                const res = await fetch(`${apiUrl}/kitap/${id}`);
+                const kitap = await res.json();
+
+                document.getElementById('kitapIdGuncelle').value = kitap.id;
+                document.getElementById('baslikGuncelle').value = kitap.baslik;
+                document.getElementById('yazarGuncelle').value = kitap.yazar;
+                document.getElementById('yayin_yiliGuncelle').value = kitap.yayin_yili;
+                document.getElementById('sayfa_sayisiGuncelle').value = kitap.sayfa_sayisi;
+                document.getElementById('turGuncelle').value = kitap.tur;
+                document.getElementById('kategoriGuncelle').value = kitap.kategori;
+
+                document.getElementById('kitapGuncelleForm').style.display = "block";
+                document.getElementById('kitapGuncelleForm').scrollIntoView({ behavior: 'smooth' });
+            } catch (error) {
+                mesajGoster("❌ Kitap bilgileri yüklenirken hata oluştu!", true);
+            }
+        }
+
+        // Kitap silme
+        async function kitapSil(id) {
+            if (!confirm("Bu kitabı silmek istediğinizden emin misiniz?")) return;
+            
+            try {
+                await fetch(`${apiUrl}/kitap-sil/${id}`, { method: "DELETE" });
+                mesajGoster("✅ Kitap başarıyla silindi!");
+                kitaplariYukle();
+            } catch (error) {
+                mesajGoster("❌ Kitap silinirken hata oluştu!", true);
+            }
+        }
+
+        // Favori değiştirme
+        async function favoriDegistir(id, favoriMi) {
+            try {
+                const url = favoriMi
+                    ? `${apiUrl}/kitap/${id}/favori-kaldir/`
+                    : `${apiUrl}/kitap/${id}/favori/`;
+                await fetch(url, { method: "POST" });
+                kitaplariYukle();
+            } catch (error) {
+                mesajGoster("❌ Favori durumu değiştirilirken hata oluştu!", true);
+            }
+        }
+
+        // Mesaj gösterme
+        function mesajGoster(mesaj, hata = false) {
+            const mesajDiv = document.getElementById("mesaj");
+            mesajDiv.innerHTML = `<div class="message ${hata ? 'error' : 'success'}">${mesaj}</div>`;
+            
+            setTimeout(() => {
+                mesajDiv.innerHTML = '';
+            }, 4000);
+        }
+
+        // Sayfa yüklendiğinde kitapları yükle
         kitaplariYukle();
-    }
-
-    async function favoriDegistir(id, favoriMi) {
-        const url = favoriMi
-            ? `${apiUrl}/kitap/${id}/favori-kaldir/`
-            : `${apiUrl}/kitap/${id}/favori/`;
-        await fetch(url, { method: "POST" });
-        kitaplariYukle();
-    }
-
-    function mesajGoster(mesaj, hata = false) {
-        const mesajDiv = document.getElementById("mesaj");
-        mesajDiv.textContent = mesaj;
-        mesajDiv.className = hata ? "error" : "success";
-        setTimeout(() => {
-            mesajDiv.textContent = "";
-            mesajDiv.className = "";
-        }, 3000);
-    }
-
-    kitaplariYukle();
-</script>
-
+    </script>
 </body>
 </html>
