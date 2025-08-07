@@ -420,9 +420,6 @@
                     </div>
                     ` : ''}
                     <div class="kiralama-actions">
-                        <button onclick="kitapIade(${kiralama.id})" class="btn btn-success">
-                            <i class="fas fa-undo"></i> İade Et
-                        </button>
                         <button onclick="viewDetails(${kiralama.id})" class="btn btn-secondary">
                             <i class="fas fa-eye"></i> Detaylar
                         </button>
@@ -500,29 +497,7 @@
             displayKiralamalar(filteredKiralamalar);
         }
 
-        // Kitap iade et
-        async function kitapIade(kiralamaId) {
-            if (!confirm('Bu kitabı iade etmek istediğinizden emin misiniz?')) {
-                return;
-            }
-            
-            try {
-                const response = await authenticatedFetch(`${apiUrl}/admin/kitap-iade/${kiralamaId}`, {
-                    method: 'POST'
-                });
-                
-                if (response.ok) {
-                    showNotification('✅ Kitap başarıyla iade edildi!', 'success');
-                    loadKiralamalar(); // Listeyi yenile
-                } else {
-                    const errorData = await response.json();
-                    showNotification('❌ ' + (errorData.detail || 'İade işlemi başarısız'), 'error');
-                }
-            } catch (error) {
-                console.error('İade hatası:', error);
-                showNotification('❌ İade sırasında hata oluştu!', 'error');
-            }
-        }
+
 
         // Detayları görüntüle
         function viewDetails(kiralamaId) {

@@ -984,12 +984,182 @@
             color: white;
         }
 
+        .auth-modal-content {
+            max-width: 900px;
+            width: 90%;
+            padding: 0;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .auth-container {
+            display: flex;
+            min-height: 500px;
+        }
+
+        .auth-sidebar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            flex: 1;
+        }
+
+        .auth-logo i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+
+        .auth-logo h3 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .auth-logo p {
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+
+        .auth-main {
+            flex: 1;
+            padding: 40px;
+            background: white;
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .auth-header h2 {
+            color: #2d3748;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .auth-header p {
+            color: #718096;
+            font-size: 0.95rem;
+        }
+
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 30px;
+            border-radius: 15px;
+            background: #f7fafc;
+            padding: 5px;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            background: transparent;
+            color: #718096;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .auth-tab.active {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
         .auth-form {
             display: none;
         }
 
         .auth-form.active {
             display: block;
+        }
+
+        .auth-form .form-group {
+            margin-bottom: 20px;
+        }
+
+        .auth-form label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #2d3748;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .auth-form label i {
+            color: #667eea;
+        }
+
+        .auth-form input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #f7fafc;
+        }
+
+        .auth-form input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .auth-btn {
+            width: 100%;
+            padding: 15px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 12px;
+            margin-top: 10px;
+        }
+
+        .error-message {
+            color: #e53e3e;
+            font-size: 0.85rem;
+            margin-top: 5px;
+            min-height: 20px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .error-message:empty {
+            display: none;
+        }
+
+        .error-message::before {
+            content: "⚠️";
+            font-size: 0.8rem;
+        }
+
+        @media (max-width: 768px) {
+            .auth-container {
+                flex-direction: column;
+            }
+            
+            .auth-sidebar {
+                padding: 30px 20px;
+            }
+            
+            .auth-main {
+                padding: 30px 20px;
+            }
         }
 
         .user-info {
@@ -1727,51 +1897,85 @@
 
     <!-- Authentication Modal -->
     <div id="authModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content auth-modal-content">
             <span class="close" onclick="closeAuthModal()">&times;</span>
             
-            <div class="auth-header">
-                <h2><i class="fas fa-user-circle"></i> Hesap İşlemleri</h2>
+            <div class="auth-container">
+                <div class="auth-sidebar">
+                    <div class="auth-logo">
+                        <i class="fas fa-book-reader"></i>
+                        <h3>Kütüphane Sistemi</h3>
+                        <p>Kitap dünyasına hoş geldiniz</p>
+                    </div>
+                </div>
+                
+                <div class="auth-main">
+                    <div class="auth-header">
+                        <h2><i class="fas fa-user-circle"></i> Hesap İşlemleri</h2>
+                        <p>Devam etmek için giriş yapın veya kayıt olun</p>
+                    </div>
+
+                    <div class="auth-tabs">
+                        <button class="auth-tab active" onclick="showLoginForm()">
+                            <i class="fas fa-sign-in-alt"></i> Giriş Yap
+                        </button>
+                        <button class="auth-tab" onclick="showRegisterForm()">
+                            <i class="fas fa-user-plus"></i> Kayıt Ol
+                        </button>
+                    </div>
+
+                    <!-- Login Form -->
+                    <form id="loginForm" class="auth-form active">
+                        <div class="form-group">
+                            <label for="loginUsername">
+                                <i class="fas fa-user"></i> Kullanıcı Adı
+                            </label>
+                            <input type="text" id="loginUsername" required placeholder="Kullanıcı adınızı girin">
+                            <div id="loginUsernameError" class="error-message"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="loginPassword">
+                                <i class="fas fa-lock"></i> Şifre
+                            </label>
+                            <input type="password" id="loginPassword" required placeholder="Şifrenizi girin">
+                            <div id="loginPasswordError" class="error-message"></div>
+                        </div>
+                        <div id="loginGeneralError" class="error-message"></div>
+                        <button type="submit" class="btn btn-primary auth-btn">
+                            <i class="fas fa-sign-in-alt"></i> Giriş Yap
+                        </button>
+                    </form>
+
+                    <!-- Register Form -->
+                    <form id="registerForm" class="auth-form">
+                        <div class="form-group">
+                            <label for="registerUsername">
+                                <i class="fas fa-user"></i> Kullanıcı Adı
+                            </label>
+                            <input type="text" id="registerUsername" required placeholder="Kullanıcı adı seçin">
+                            <div id="registerUsernameError" class="error-message"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="registerEmail">
+                                <i class="fas fa-envelope"></i> E-mail
+                            </label>
+                            <input type="email" id="registerEmail" required placeholder="E-mail adresinizi girin">
+                            <div id="registerEmailError" class="error-message"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="registerPassword">
+                                <i class="fas fa-lock"></i> Şifre
+                            </label>
+                            <input type="password" id="registerPassword" required placeholder="Güçlü bir şifre seçin">
+                            <div id="registerPasswordError" class="error-message"></div>
+                        </div>
+                        <div id="registerGeneralError" class="error-message"></div>
+                        <button type="submit" class="btn btn-primary auth-btn">
+                            <i class="fas fa-user-plus"></i> Kayıt Ol
+                        </button>
+                    </form>
+                </div>
             </div>
-
-            <div class="auth-tabs">
-                <button class="auth-tab active" onclick="showLoginForm()">Giriş Yap</button>
-                <button class="auth-tab" onclick="showRegisterForm()">Kayıt Ol</button>
-            </div>
-
-            <!-- Login Form -->
-            <form id="loginForm" class="auth-form active">
-                <div class="form-group">
-                    <label for="loginUsername">Kullanıcı Adı</label>
-                    <input type="text" id="loginUsername" required placeholder="Kullanıcı adınızı girin">
-                </div>
-                <div class="form-group">
-                    <label for="loginPassword">Şifre</label>
-                    <input type="password" id="loginPassword" required placeholder="Şifrenizi girin">
-                </div>
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-sign-in-alt"></i> Giriş Yap
-                </button>
-    </form>
-
-            <!-- Register Form -->
-            <form id="registerForm" class="auth-form">
-                <div class="form-group">
-                    <label for="registerUsername">Kullanıcı Adı</label>
-                    <input type="text" id="registerUsername" required placeholder="Kullanıcı adı seçin">
-                </div>
-                <div class="form-group">
-                    <label for="registerEmail">E-mail</label>
-                    <input type="email" id="registerEmail" required placeholder="E-mail adresinizi girin">
-                </div>
-                <div class="form-group">
-                    <label for="registerPassword">Şifre</label>
-                    <input type="password" id="registerPassword" required placeholder="Güçlü bir şifre seçin">
-                </div>
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-user-plus"></i> Kayıt Ol
-                </button>
-            </form>
         </div>
     </div>
 
@@ -1796,6 +2000,10 @@
             
             document.querySelectorAll('.auth-tab')[0].classList.add('active');
             document.getElementById('loginForm').classList.add('active');
+            
+            // Hata mesajlarını temizle
+            clearLoginErrors();
+            clearRegisterErrors();
         }
 
         function showRegisterForm() {
@@ -1804,11 +2012,18 @@
             
             document.querySelectorAll('.auth-tab')[1].classList.add('active');
             document.getElementById('registerForm').classList.add('active');
+            
+            // Hata mesajlarını temizle
+            clearLoginErrors();
+            clearRegisterErrors();
         }
 
         // Login Form Handler
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
+            
+            // Hata mesajlarını temizle
+            clearLoginErrors();
             
             const username = document.getElementById('loginUsername').value;
             const password = document.getElementById('loginPassword').value;
@@ -1836,16 +2051,31 @@
                     mesajGoster('✅ Başarıyla giriş yaptınız!');
                     kitaplariYukle();
                 } else {
-                    mesajGoster('❌ ' + data.detail, true);
+                    showLoginError(data.detail);
                 }
             } catch (error) {
-                mesajGoster('❌ Giriş yapılırken hata oluştu!', true);
+                showLoginError('Giriş yapılırken hata oluştu!');
             }
         });
+
+        // Giriş hata mesajlarını temizle
+        function clearLoginErrors() {
+            document.getElementById('loginUsernameError').textContent = '';
+            document.getElementById('loginPasswordError').textContent = '';
+            document.getElementById('loginGeneralError').textContent = '';
+        }
+
+        // Giriş hata mesajını göster
+        function showLoginError(message) {
+            document.getElementById('loginGeneralError').textContent = message;
+        }
 
         // Register Form Handler
         document.getElementById('registerForm').addEventListener('submit', async function(e) {
             e.preventDefault();
+            
+            // Hata mesajlarını temizle
+            clearRegisterErrors();
             
             const username = document.getElementById('registerUsername').value;
             const email = document.getElementById('registerEmail').value;
@@ -1871,12 +2101,25 @@
                     showLoginForm();
                     document.getElementById('registerForm').reset();
                 } else {
-                    mesajGoster('❌ ' + data.detail, true);
+                    showRegisterError(data.detail);
                 }
             } catch (error) {
-                mesajGoster('❌ Kayıt olurken hata oluştu!', true);
+                showRegisterError('Kayıt olurken hata oluştu!');
             }
         });
+
+        // Kayıt hata mesajlarını temizle
+        function clearRegisterErrors() {
+            document.getElementById('registerUsernameError').textContent = '';
+            document.getElementById('registerEmailError').textContent = '';
+            document.getElementById('registerPasswordError').textContent = '';
+            document.getElementById('registerGeneralError').textContent = '';
+        }
+
+        // Kayıt hata mesajını göster
+        function showRegisterError(message) {
+            document.getElementById('registerGeneralError').textContent = message;
+        }
 
         function logout() {
             authToken = null;
@@ -1901,9 +2144,10 @@
                 }
             });
             
-            // Kitaplar container'ındaki arama kutusunu göster
+            // Kitaplar container'ını göster
             const kitaplarContainer = document.getElementById('kitaplarContainer');
             if (kitaplarContainer) {
+                kitaplarContainer.style.display = 'block';
                 const searchBar = kitaplarContainer.querySelector('.search-bar');
                 if (searchBar) {
                     searchBar.style.display = 'block';
@@ -2019,6 +2263,11 @@
                 }
             } else {
                 updateUIForLoggedOutUser();
+                // Giriş yapmamış kullanıcılar için kitaplar bölümünü gizle
+                const kitaplarContainer = document.getElementById('kitaplarContainer');
+                if (kitaplarContainer) {
+                    kitaplarContainer.style.display = 'none';
+                }
             }
         }
 
