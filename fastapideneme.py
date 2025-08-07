@@ -8,7 +8,7 @@ from datetime import timedelta, datetime
 import calendar
 
 from database import SessionLocal, engine, get_db
-from models import KitapModel, UserModel, KategoriModel, KiralamaModel
+from models import KitapModel, UserModel, KategoriModel, KiralamaModel, FavoriModel
 from models import Base  # Veritabanı tablolarını oluşturmak için
 from auth import (
     authenticate_user, 
@@ -31,6 +31,14 @@ def check_admin_permission(current_user: UserModel):
 def get_active_categories(db: Session):
     """Aktif kategorileri getir"""
     return db.query(KategoriModel).filter(KategoriModel.is_active == True).all()
+
+def check_user_favorite(db: Session, user_id: int, kitap_id: int) -> bool:
+    """Kullanıcının kitabı favori olarak işaretleyip işaretlemediğini kontrol et"""
+    favori = db.query(FavoriModel).filter(
+        FavoriModel.kullanici_id == user_id,
+        FavoriModel.kitap_id == kitap_id
+    ).first()
+    return favori is not None
 
 # Veritabanı tablolarını oluştur
 Base.metadata.create_all(bind=engine)
@@ -72,7 +80,7 @@ class KitapEkle(BaseModel):
 
 class Kitap(KitapEkle):
     id: int
-    favori: bool = False
+    favori: bool = False  # Kullanıcı bazlı favori durumu
     kiralanmis: bool = False  # Kiralama durumu
 
     class Config:
@@ -297,7 +305,7 @@ def admin_istatistikler(
     toplam_kitap = db.query(KitapModel).count()
     toplam_kullanici = db.query(UserModel).count()
     toplam_kategori = db.query(KategoriModel).count()
-    favori_kitap = db.query(KitapModel).filter(KitapModel.favori == True).count()
+    favori_kitap = db.query(FavoriModel).count()  # Toplam favori sayısı
     kiralanmis_kitap = db.query(KiralamaModel).filter(KiralamaModel.durum == "kiralandi").count()
     gecikmis_kitap = db.query(KiralamaModel).filter(
         KiralamaModel.durum == "kiralandi",
@@ -353,6 +361,7 @@ def kitap_iade(
     db: Session = Depends(get_db),
     current_user: UserModel = Depends(get_current_user)
 ):
+    """Admin kitap iade işlemi"""
     check_admin_permission(current_user)
     
     kiralama = db.query(KiralamaModel).filter(KiralamaModel.id == kiralama_id).first()
@@ -361,6 +370,11 @@ def kitap_iade(
     
     if kiralama.durum == "iade_edildi":
         raise HTTPException(status_code=400, detail="Bu kitap zaten iade edilmiş")
+    
+    # Kitabı bul ve stok adedini artır
+    kitap = db.query(KitapModel).filter(KitapModel.id == kiralama.kitap_id).first()
+    if kitap:
+        kitap.stok_adedi += 1
     
     kiralama.durum = "iade_edildi"
     kiralama.iade_tarihi = datetime.now()
@@ -385,6 +399,11 @@ def kullanici_kitap_iade(
     
     if kiralama.durum == "iade_edildi":
         raise HTTPException(status_code=400, detail="Bu kitap zaten iade edilmiş")
+    
+    # Kitabı bul ve stok adedini artır
+    kitap = db.query(KitapModel).filter(KitapModel.id == kiralama.kitap_id).first()
+    if kitap:
+        kitap.stok_adedi += 1
     
     kiralama.durum = "iade_edildi"
     kiralama.iade_tarihi = datetime.now()
@@ -432,26 +451,143 @@ def setup_admin(db: Session = Depends(get_db)):
         kategori = KategoriModel(**cat_data)
         db.add(kategori)
     
+    # Varsayılan kitaplar oluştur
+    default_books = [
+        {
+            "baslik": "Suç ve Ceza",
+            "yazar": "Fyodor Dostoyevski",
+            "yayin_yili": 1866,
+            "sayfa_sayisi": 671,
+            "tur": "Roman",
+            "kategori": "Roman",
+            "aciklama": "Psikolojik gerilim romanı",
+            "stok_adedi": 3,
+            "kiralanabilir": True
+        },
+        {
+            "baslik": "1984",
+            "yazar": "George Orwell",
+            "yayin_yili": 1949,
+            "sayfa_sayisi": 328,
+            "tur": "Distopya",
+            "kategori": "Bilim Kurgu",
+            "aciklama": "Distopik roman",
+            "stok_adedi": 2,
+            "kiralanabilir": True
+        },
+        {
+            "baslik": "Dune",
+            "yazar": "Frank Herbert",
+            "yayin_yili": 1965,
+            "sayfa_sayisi": 688,
+            "tur": "Bilim Kurgu",
+            "kategori": "Bilim Kurgu",
+            "aciklama": "Epik bilim kurgu romanı",
+            "stok_adedi": 4,
+            "kiralanabilir": True
+        },
+        {
+            "baslik": "Osmanlı Tarihi",
+            "yazar": "Halil İnalcık",
+            "yayin_yili": 2003,
+            "sayfa_sayisi": 456,
+            "tur": "Tarih",
+            "kategori": "Tarih",
+            "aciklama": "Osmanlı İmparatorluğu tarihi",
+            "stok_adedi": 2,
+            "kiralanabilir": True
+        },
+        {
+            "baslik": "Kozmos",
+            "yazar": "Carl Sagan",
+            "yayin_yili": 1980,
+            "sayfa_sayisi": 365,
+            "tur": "Bilim",
+            "kategori": "Bilim",
+            "aciklama": "Evren hakkında bilimsel kitap",
+            "stok_adedi": 3,
+            "kiralanabilir": True
+        },
+        {
+            "baslik": "Küçük Prens",
+            "yazar": "Antoine de Saint-Exupéry",
+            "yayin_yili": 1943,
+            "sayfa_sayisi": 96,
+            "tur": "Çocuk",
+            "kategori": "Çocuk",
+            "aciklama": "Klasik çocuk romanı",
+            "stok_adedi": 5,
+            "kiralanabilir": True
+        },
+        {
+            "baslik": "Python Programlama",
+            "yazar": "Mark Lutz",
+            "yayin_yili": 2013,
+            "sayfa_sayisi": 1648,
+            "tur": "Teknoloji",
+            "kategori": "Teknoloji",
+            "aciklama": "Python programlama dili rehberi",
+            "stok_adedi": 2,
+            "kiralanabilir": True
+        },
+        {
+            "baslik": "Matematik Tarihi",
+            "yazar": "Carl Boyer",
+            "yayin_yili": 1991,
+            "sayfa_sayisi": 736,
+            "tur": "Eğitim",
+            "kategori": "Eğitim",
+            "aciklama": "Matematik tarihi hakkında kapsamlı kitap",
+            "stok_adedi": 1,
+            "kiralanabilir": True
+        },
+        {
+            "baslik": "Şeker Portakalı",
+            "yazar": "José Mauro de Vasconcelos",
+            "yayin_yili": 1968,
+            "sayfa_sayisi": 184,
+            "tur": "Roman",
+            "kategori": "Roman",
+            "aciklama": "Duygusal roman",
+            "stok_adedi": 3,
+            "kiralanabilir": True
+        },
+        {
+            "baslik": "Yapay Zeka",
+            "yazar": "Stuart Russell",
+            "yayin_yili": 2010,
+            "sayfa_sayisi": 1132,
+            "tur": "Teknoloji",
+            "kategori": "Teknoloji",
+            "aciklama": "Yapay zeka hakkında kapsamlı kitap",
+            "stok_adedi": 2,
+            "kiralanabilir": True
+        }
+    ]
+    
+    for book_data in default_books:
+        kitap = KitapModel(**book_data)
+        db.add(kitap)
+    
     db.commit()
     return {
-        "mesaj": "Admin kullanıcısı ve kategoriler oluşturuldu",
+        "mesaj": "Admin kullanıcısı, kategoriler ve 10 kitap oluşturuldu",
         "admin_username": "admin",
         "admin_password": "admin123"
     }
 
+
+
 # Kitap işlemleri
 @app.get("/kitaplar/", response_model=List[Kitap])
 def kitaplari_listele(db: Session = Depends(get_db), current_user: UserModel = Depends(get_current_user)):
-    """Kitapları listele - Kiralama durumu ile birlikte"""
+    """Kitapları listele - Stok durumu ile birlikte"""
     kitaplar = db.query(KitapModel).all()
     result = []
     
     for kitap in kitaplar:
-        # Kitabın kiralama durumunu kontrol et
-        aktif_kiralama = db.query(KiralamaModel).filter(
-            KiralamaModel.kitap_id == kitap.id,
-            KiralamaModel.durum == "kiralandi"
-        ).first()
+        # Kullanıcının favori durumunu kontrol et
+        is_favorite = check_user_favorite(db, current_user.id, kitap.id)
         
         kitap_dict = {
             "id": kitap.id,
@@ -465,8 +601,8 @@ def kitaplari_listele(db: Session = Depends(get_db), current_user: UserModel = D
             "aciklama": kitap.aciklama,
             "stok_adedi": kitap.stok_adedi,
             "kiralanabilir": kitap.kiralanabilir,
-            "favori": kitap.favori,
-            "kiralanmis": aktif_kiralama is not None
+            "favori": is_favorite,
+            "kiralanmis": kitap.stok_adedi <= 0  # Stok 0 ise kiralanmış sayılır
         }
         result.append(Kitap(**kitap_dict))
     
@@ -479,11 +615,8 @@ def kitap_getir(kitap_id: int, db: Session = Depends(get_db), current_user: User
     if not kitap:
         raise HTTPException(status_code=404, detail="Kitap bulunamadı")
     
-    # Kitabın kiralama durumunu kontrol et
-    aktif_kiralama = db.query(KiralamaModel).filter(
-        KiralamaModel.kitap_id == kitap.id,
-        KiralamaModel.durum == "kiralandi"
-    ).first()
+    # Kullanıcının favori durumunu kontrol et
+    is_favorite = check_user_favorite(db, current_user.id, kitap.id)
     
     kitap_dict = {
         "id": kitap.id,
@@ -497,8 +630,8 @@ def kitap_getir(kitap_id: int, db: Session = Depends(get_db), current_user: User
         "aciklama": kitap.aciklama,
         "stok_adedi": kitap.stok_adedi,
         "kiralanabilir": kitap.kiralanabilir,
-        "favori": kitap.favori,
-        "kiralanmis": aktif_kiralama is not None
+        "favori": is_favorite,
+        "kiralanmis": kitap.stok_adedi <= 0  # Stok 0 ise kiralanmış sayılır
     }
     
     return Kitap(**kitap_dict)
@@ -506,33 +639,32 @@ def kitap_getir(kitap_id: int, db: Session = Depends(get_db), current_user: User
 @app.get("/kitaplar/musait/", response_model=List[Kitap])
 def musait_kitaplari_getir(db: Session = Depends(get_db), current_user: UserModel = Depends(get_current_user)):
     """Müsait kitapları getir"""
-    kitaplar = db.query(KitapModel).filter(KitapModel.kiralanabilir == True).all()
+    kitaplar = db.query(KitapModel).filter(
+        KitapModel.kiralanabilir == True,
+        KitapModel.stok_adedi > 0  # Stok adedi 0'dan büyük olanlar
+    ).all()
     result = []
     
     for kitap in kitaplar:
-        # Kitabın kiralama durumunu kontrol et
-        aktif_kiralama = db.query(KiralamaModel).filter(
-            KiralamaModel.kitap_id == kitap.id,
-            KiralamaModel.durum == "kiralandi"
-        ).first()
+        # Kullanıcının favori durumunu kontrol et
+        is_favorite = check_user_favorite(db, current_user.id, kitap.id)
         
-        if not aktif_kiralama:  # Sadece müsait olanları ekle
-            kitap_dict = {
-                "id": kitap.id,
-                "baslik": kitap.baslik,
-                "yazar": kitap.yazar,
-                "yayin_yili": kitap.yayin_yili,
-                "sayfa_sayisi": kitap.sayfa_sayisi,
-                "tur": kitap.tur,
-                "kategori": kitap.kategori,
-                "isbn": kitap.isbn,
-                "aciklama": kitap.aciklama,
-                "stok_adedi": kitap.stok_adedi,
-                "kiralanabilir": kitap.kiralanabilir,
-                "favori": kitap.favori,
-                "kiralanmis": False
-            }
-            result.append(Kitap(**kitap_dict))
+        kitap_dict = {
+            "id": kitap.id,
+            "baslik": kitap.baslik,
+            "yazar": kitap.yazar,
+            "yayin_yili": kitap.yayin_yili,
+            "sayfa_sayisi": kitap.sayfa_sayisi,
+            "tur": kitap.tur,
+            "kategori": kitap.kategori,
+            "isbn": kitap.isbn,
+            "aciklama": kitap.aciklama,
+            "stok_adedi": kitap.stok_adedi,
+            "kiralanabilir": kitap.kiralanabilir,
+            "favori": is_favorite,
+            "kiralanmis": False
+        }
+        result.append(Kitap(**kitap_dict))
     
     return result
 
@@ -542,37 +674,48 @@ def kitap_kirala(
     db: Session = Depends(get_db),
     current_user: UserModel = Depends(get_current_user)
 ):
-    """Kitap kirala"""
-    # Kitap var mı kontrol et
+    """Kitap kiralama"""
+    # Kitabı kontrol et
     kitap = db.query(KitapModel).filter(KitapModel.id == kiralama_data.kitap_id).first()
     if not kitap:
         raise HTTPException(status_code=404, detail="Kitap bulunamadı")
     
-    # Kitap kiralanabilir mi?
+    # Kitabın kiralanabilir olup olmadığını kontrol et
     if not kitap.kiralanabilir:
         raise HTTPException(status_code=400, detail="Bu kitap kiralanamaz")
     
-    # Kitap zaten kiralanmış mı?
-    aktif_kiralama = db.query(KiralamaModel).filter(
+    # Stok kontrolü
+    if kitap.stok_adedi <= 0:
+        raise HTTPException(status_code=400, detail="Bu kitabın stokta kopyası kalmamış")
+    
+    # Kullanıcının bu kitabı zaten kiralayıp kiralamadığını kontrol et
+    mevcut_kiralama = db.query(KiralamaModel).filter(
         KiralamaModel.kitap_id == kiralama_data.kitap_id,
+        KiralamaModel.kullanici_id == current_user.id,
         KiralamaModel.durum == "kiralandi"
     ).first()
     
-    if aktif_kiralama:
-        raise HTTPException(status_code=400, detail="Bu kitap zaten kiralanmış")
+    if mevcut_kiralama:
+        raise HTTPException(status_code=400, detail="Bu kitabı zaten kiralamışsınız")
     
-    # Kiralama oluştur
+    # Yeni kiralama oluştur
     yeni_kiralama = KiralamaModel(
         kitap_id=kiralama_data.kitap_id,
         kullanici_id=current_user.id,
+        kiralama_tarihi=datetime.now(),
         beklenen_iade_tarihi=kiralama_data.beklenen_iade_tarihi,
+        durum="kiralandi",
         notlar=kiralama_data.notlar
     )
+    
+    # Stok adedini azalt
+    kitap.stok_adedi -= 1
     
     db.add(yeni_kiralama)
     db.commit()
     db.refresh(yeni_kiralama)
     
+    # Response için kitap ve kullanıcı bilgilerini al
     return KiralamaResponse(
         id=yeni_kiralama.id,
         kitap_id=yeni_kiralama.kitap_id,
@@ -635,6 +778,9 @@ def admin_kitap_ekle(
         db.commit()
         db.refresh(yeni_kitap)
         
+        # Kullanıcının favori durumunu kontrol et
+        is_favorite = check_user_favorite(db, current_user.id, yeni_kitap.id)
+        
         return Kitap(
             id=yeni_kitap.id,
             baslik=yeni_kitap.baslik,
@@ -643,11 +789,11 @@ def admin_kitap_ekle(
             sayfa_sayisi=yeni_kitap.sayfa_sayisi,
             tur=yeni_kitap.tur,
             kategori=yeni_kitap.kategori,
-
+            isbn=yeni_kitap.isbn,
             aciklama=yeni_kitap.aciklama,
             stok_adedi=yeni_kitap.stok_adedi,
             kiralanabilir=yeni_kitap.kiralanabilir,
-            favori=yeni_kitap.favori,
+            favori=is_favorite,
             kiralanmis=False
         )
     except Exception as e:
@@ -679,6 +825,9 @@ def admin_kitap_guncelle(
     db.commit()
     db.refresh(kitap)
     
+    # Kullanıcının favori durumunu kontrol et
+    is_favorite = check_user_favorite(db, current_user.id, kitap.id)
+    
     return Kitap(
         id=kitap.id,
         baslik=kitap.baslik,
@@ -687,11 +836,11 @@ def admin_kitap_guncelle(
         sayfa_sayisi=kitap.sayfa_sayisi,
         tur=kitap.tur,
         kategori=kitap.kategori,
-        
+        isbn=kitap.isbn,
         aciklama=kitap.aciklama,
         stok_adedi=kitap.stok_adedi,
         kiralanabilir=kitap.kiralanabilir,
-        favori=kitap.favori,
+        favori=is_favorite,
         kiralanmis=False
     )
 
@@ -724,26 +873,76 @@ def admin_kitap_sil(
 # Favori işlemleri
 @app.get("/kitaplar/favoriler/", response_model=List[Kitap])
 def favori_kitaplari_getir(db: Session = Depends(get_db), current_user: UserModel = Depends(get_current_user)):
-    return db.query(KitapModel).filter(KitapModel.favori == True).all()
+    """Kullanıcının favori kitaplarını getir"""
+    # Kullanıcının favori kitaplarını al
+    favori_kitaplar = db.query(KitapModel).join(FavoriModel).filter(
+        FavoriModel.kullanici_id == current_user.id
+    ).all()
+    
+    result = []
+    for kitap in favori_kitaplar:
+        kitap_dict = {
+            "id": kitap.id,
+            "baslik": kitap.baslik,
+            "yazar": kitap.yazar,
+            "yayin_yili": kitap.yayin_yili,
+            "sayfa_sayisi": kitap.sayfa_sayisi,
+            "tur": kitap.tur,
+            "kategori": kitap.kategori,
+            "isbn": kitap.isbn,
+            "aciklama": kitap.aciklama,
+            "stok_adedi": kitap.stok_adedi,
+            "kiralanabilir": kitap.kiralanabilir,
+            "favori": True,  # Favori listesinde olduğu için True
+            "kiralanmis": kitap.stok_adedi <= 0
+        }
+        result.append(Kitap(**kitap_dict))
+    
+    return result
 
 @app.post("/kitap/{kitap_id}/favori/")
 def favori_yap(kitap_id: int, db: Session = Depends(get_db), current_user: UserModel = Depends(get_current_user)):
+    """Kitabı favorilere ekle"""
     kitap = db.query(KitapModel).filter(KitapModel.id == kitap_id).first()
     if not kitap:
         raise HTTPException(status_code=404, detail="Kitap bulunamadı!")
-    if kitap.favori:
+    
+    # Zaten favori mi kontrol et
+    existing_favorite = db.query(FavoriModel).filter(
+        FavoriModel.kullanici_id == current_user.id,
+        FavoriModel.kitap_id == kitap_id
+    ).first()
+    
+    if existing_favorite:
         raise HTTPException(status_code=400, detail="Zaten favorilerde.")
-    kitap.favori = True
+    
+    # Yeni favori kaydı oluştur
+    yeni_favori = FavoriModel(
+        kullanici_id=current_user.id,
+        kitap_id=kitap_id
+    )
+    db.add(yeni_favori)
     db.commit()
+    
     return {"mesaj": f"{kitap.baslik} favorilere eklendi."}
 
 @app.post("/kitap/{kitap_id}/favori-kaldir/")
 def favori_kaldir(kitap_id: int, db: Session = Depends(get_db), current_user: UserModel = Depends(get_current_user)):
+    """Kitabı favorilerden çıkar"""
     kitap = db.query(KitapModel).filter(KitapModel.id == kitap_id).first()
     if not kitap:
         raise HTTPException(status_code=404, detail="Kitap bulunamadı!")
-    if not kitap.favori:
+    
+    # Favori kaydını bul ve sil
+    favori_kayit = db.query(FavoriModel).filter(
+        FavoriModel.kullanici_id == current_user.id,
+        FavoriModel.kitap_id == kitap_id
+    ).first()
+    
+    if not favori_kayit:
         raise HTTPException(status_code=400, detail="Kitap favorilerde değil.")
-    kitap.favori = False
+    
+    db.delete(favori_kayit)
     db.commit()
+    
     return {"mesaj": f"{kitap.baslik} favorilerden çıkarıldı."}

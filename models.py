@@ -12,7 +12,6 @@ class KitapModel(Base):
     yayin_yili = Column(Integer, nullable=False)
     sayfa_sayisi = Column(Integer, nullable=False)
     tur = Column(String, nullable=True)
-    favori = Column(Boolean, default=False)
     kategori = Column(String, nullable=False)
     isbn = Column(String, unique=True, nullable=True)  # ISBN numarası
     aciklama = Column(Text, nullable=True)  # Kitap açıklaması
@@ -64,3 +63,15 @@ class KiralamaModel(Base):
     # İlişkiler
     kitap = relationship("KitapModel", backref="kiralamalar")
     kullanici = relationship("UserModel", backref="kiralamalar")
+
+class FavoriModel(Base):
+    __tablename__ = "favoriler"
+
+    id = Column(Integer, primary_key=True, index=True)
+    kullanici_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    kitap_id = Column(Integer, ForeignKey("kitaplar.id"), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # İlişkiler
+    kullanici = relationship("UserModel", backref="favoriler")
+    kitap = relationship("KitapModel", backref="favoriler")
